@@ -1,23 +1,23 @@
 
-use crate::cpu_mod::cpu::Cpu;
-use crate::cpu_mod::cpu6502::Cpu6502;
 
 const RAM_SIZE : u32 = 64 * 1024;
 const RAM_ADDR_MAX : u16 = 0xFFFF;
 const RAM_ADDR_MIN : u16 = 0x0000;
 
 pub struct Bus {
-    cpu: Cpu6502,
     ram: [u8; RAM_SIZE as usize],
+    // read_func: fn(u16) -> u8,
+    // write_func: fn(u16, u8)
 }
 
 
 impl Bus {
     pub fn new() -> Bus{
-        let cpu = Cpu6502::new(); 
         let bus = Bus {
-            cpu, 
-            ram: [0x00; RAM_SIZE as usize]
+            ram: [0x00; RAM_SIZE as usize],
+            // read_func: Bus::read, 
+            // write_func: Bus::write
+            
         };
 
         // cpu.connect_bus(&bus);
