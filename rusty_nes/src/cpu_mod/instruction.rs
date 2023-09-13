@@ -1,11 +1,12 @@
-use crate::{bus_mod::bus::CpuRAM, iodevice::IODevice};
+use crate::iodevice::IODevice;
 
-use super::cpu6502::Cpu6502;
+use super::{cpu6502::Cpu6502, cpu::Cpu, flags6502::Flags6502};
 
 pub struct Instruction {
     name: String,
     operator: Box<dyn ExecutableOperation>,
     addrmode: Box<dyn ExecutableOperation>,
+    addrtype: AddrMode,
     cycles: u8,
 }
 
@@ -20,75 +21,77 @@ impl Instruction {
         name: &str,
         operator: Box<dyn ExecutableOperation>,
         addrmode: Box<dyn ExecutableOperation>,
+        addrtype: AddrMode,
         cycles: u8,
     ) -> Instruction {
         Instruction {
             name: name.to_string(),
             operator,
             addrmode,
+            addrtype,
             cycles,
         }
     }
 
     pub fn from_opcode(opcode: u8) -> Instruction {
         match opcode {
-            0 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 5),
-            1 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            2 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            3 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            4 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            5 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            6 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            7 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            8 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            9 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            10 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            11 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            12 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            13 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            14 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            15 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            16 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            17 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            18 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            19 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            20 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            21 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            22 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            23 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            24 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            25 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            26 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            27 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            28 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            29 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            30 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            31 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            32 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            33 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            34 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            35 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            36 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            37 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            38 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            39 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            40 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            41 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            42 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            43 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            44 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            45 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            46 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            47 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            48 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            49 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            50 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            51 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            52 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            53 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            54 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            55 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), 0),
-            _ => Instruction::new("???", Box::new(ADC), Box::new(IMP), 0),
+            0 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 5),
+            1 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            2 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            3 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            4 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            5 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            6 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            7 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            8 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            9 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            10 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            11 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            12 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            13 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            14 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            15 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            16 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            17 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            18 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            19 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            20 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            21 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            22 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            23 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            24 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            25 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            26 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            27 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            28 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            29 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            30 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            31 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            32 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            33 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            34 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            35 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            36 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            37 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            38 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            39 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            40 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            41 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            42 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            43 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            44 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            45 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            46 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            47 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            48 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            49 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            50 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            51 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            52 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            53 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            54 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            55 => Instruction::new("OPNAME", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
+            _ => Instruction::new("???", Box::new(ADC), Box::new(IMP), AddrMode::IMP, 0),
         }
     }
 /* 
@@ -104,7 +107,7 @@ impl Instruction {
         self.operator.execute(cpu, io)
     }
 
-    pub fn execute_addmode(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    pub fn execute_addrmode(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
         self.addrmode.execute(cpu, io)
     }
     pub fn get_cycles(&self) -> u8 {
@@ -115,11 +118,31 @@ impl Instruction {
     pub fn get_name(&self) -> &str {
         &self.name
     }
+
+    pub fn get_addrmode(&self) -> AddrMode {
+        self.addrtype
+    }
 }
 
 pub trait ExecutableOperation {
     // fn execute(&self, cpu: &mut Cpu6502, bus: &mut CpuRAM) -> u8;
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8;
+}
+
+#[derive(Clone, Copy)]
+pub enum AddrMode {
+    IMP,
+    IMM,
+    ZP0,
+    ZPX,
+    ZPY,
+    REL,
+    ABS,
+    ABX,
+    ABY,
+    IND,
+    IZX,
+    IZY
 }
 
 // Addressing Modes
@@ -351,7 +374,845 @@ impl ExecutableOperation for ADC {
     }
     */
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
-       0
+        cpu.fetch(io);
+
+        cpu.temp = cpu.a as u16 + cpu.fetched as u16 + cpu.get_flag(Flags6502::C) as u16;
+
+        cpu.set_flag(Flags6502::C, cpu.temp > 255);
+        cpu.set_flag(Flags6502::Z, (cpu.temp & 0x00FF) == 0);
+        cpu.set_flag(Flags6502::V, (!(cpu.a as u16 ^ cpu.fetched as u16) & (cpu.a as u16 ^ cpu.temp as u16)) != 0);
+        cpu.set_flag(Flags6502::N,( cpu.temp & 0x80) != 0);
+
+        cpu.a = (cpu.temp & 0x00FF) as u8;
+
+        1
     }
 }
 
+
+pub struct SBC;
+impl ExecutableOperation for SBC {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.fetch(io);
+        
+        let value: u16 = (cpu.fetched as u16) ^ 0x00FF;
+        cpu.temp = cpu.a as u16 + value + cpu.get_flag(Flags6502::C) as u16;
+        
+        cpu.set_flag(Flags6502::C, (cpu.temp & 0xFF00) != 0);
+        cpu.set_flag(Flags6502::Z, (cpu.temp & 0x00FF) == 0);
+        cpu.set_flag(Flags6502::V, ((cpu.temp ^ cpu.a as u16) & (cpu.temp ^ value) & 0x0080) != 0);
+        cpu.set_flag(Flags6502::N, (cpu.temp & 0x0080) != 0);
+
+        cpu.a = (cpu.temp & 0x00FF) as u8;
+
+        1
+    }
+}
+
+
+pub struct AND;
+impl ExecutableOperation for AND {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.fetch(io);
+        cpu.a = cpu.a & cpu.fetched;
+
+        cpu.set_flag(Flags6502::Z, cpu.a == 0);
+        cpu.set_flag(Flags6502::N, (cpu.a & 0x80) != 0);
+        1
+    }
+}
+
+
+pub struct ASL;
+impl ExecutableOperation for ASL {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.fetch(io);
+        cpu.temp = (cpu.fetched as u16) << 1;
+
+        cpu.set_flag(Flags6502::C, (cpu.temp & 0xFF00) > 0);
+        cpu.set_flag(Flags6502::Z, (cpu.temp & 0x00FF) == 0x00);
+        cpu.set_flag(Flags6502::N, (cpu.temp & 0x80) != 0);
+        if matches!(Instruction::from_opcode(cpu.opcode).get_addrmode(), AddrMode::IMP) {
+            cpu.a = (cpu.temp & 0x00FF) as u8;
+        } else {
+            io.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8);
+        }
+        0
+    }
+}
+
+
+pub struct BCC;
+impl ExecutableOperation for BCC {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        if cpu.get_flag(Flags6502::C) == 0 {
+            cpu.cycles += 1; // Maybe move to return value
+
+            cpu.addr_abs = cpu.pc + cpu.addr_rel;
+
+            if (cpu.addr_abs & 0xFF00) != (cpu.pc & 0xFF00) {
+                cpu.cycles += 1;
+            }
+
+            cpu.pc = cpu.addr_abs
+        }
+
+        0
+    }
+}
+
+pub struct BCS;
+impl ExecutableOperation for BCS {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        if cpu.get_flag(Flags6502::C) == 1 {
+            cpu.cycles += 1; // Maybe move to return value
+
+            cpu.addr_abs = cpu.pc + cpu.addr_rel;
+
+            if (cpu.addr_abs & 0xFF00) != (cpu.pc & 0xFF00) {
+                cpu.cycles += 1;
+            }
+
+            cpu.pc = cpu.addr_abs
+        }
+
+        0
+    }
+}
+
+
+pub struct BEQ;
+impl ExecutableOperation for BEQ {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        if cpu.get_flag(Flags6502::Z) == 1 {
+            cpu.cycles += 1; // Maybe move to return value
+
+            cpu.addr_abs = cpu.pc + cpu.addr_rel;
+
+            if (cpu.addr_abs & 0xFF00) != (cpu.pc & 0xFF00) {
+                cpu.cycles += 1;
+            }
+
+            cpu.pc = cpu.addr_abs
+        }
+
+        0
+    }
+}
+
+pub struct BIT;
+impl ExecutableOperation for BIT {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.fetch(io);
+
+        cpu.temp = (cpu.a & cpu.fetched) as u16;
+
+        cpu.set_flag(Flags6502::Z, (cpu.temp & 0x00FF) == 0x00);
+        cpu.set_flag(Flags6502::N, (cpu.fetched & (1 << 7)) != 0);
+        cpu.set_flag(Flags6502::V, (cpu.fetched & (1 << 6)) != 0);
+
+        0
+    }
+}
+
+
+
+pub struct BMI;
+impl ExecutableOperation for BMI {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        if cpu.get_flag(Flags6502::N) == 1 {
+            cpu.cycles += 1; // Maybe move to return value
+
+            cpu.addr_abs = cpu.pc + cpu.addr_rel;
+
+            if (cpu.addr_abs & 0xFF00) != (cpu.pc & 0xFF00) {
+                cpu.cycles += 1;
+            }
+
+            cpu.pc = cpu.addr_abs
+        }
+
+        0
+    }
+}
+
+
+pub struct BNE;
+impl ExecutableOperation for BNE {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        if cpu.get_flag(Flags6502::Z) == 0 {
+            cpu.cycles += 1; // Maybe move to return value
+
+            cpu.addr_abs = cpu.pc + cpu.addr_rel;
+
+            if (cpu.addr_abs & 0xFF00) != (cpu.pc & 0xFF00) {
+                cpu.cycles += 1;
+            }
+
+            cpu.pc = cpu.addr_abs
+        }
+
+        0
+    }
+}
+
+
+pub struct BPL;
+impl ExecutableOperation for BPL {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        if cpu.get_flag(Flags6502::N) == 0 {
+            cpu.cycles += 1; // Maybe move to return value
+
+            cpu.addr_abs = cpu.pc + cpu.addr_rel;
+
+            if (cpu.addr_abs & 0xFF00) != (cpu.pc & 0xFF00) {
+                cpu.cycles += 1;
+            }
+
+            cpu.pc = cpu.addr_abs
+        }
+
+        0
+    }
+}
+
+
+pub struct BRK;
+impl ExecutableOperation for BRK {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.pc += 1;
+        
+        cpu.set_flag(Flags6502::I, true);
+        io.write(0x0100 + (cpu.stkp as u16), ((cpu.pc >> 8) & 0x00FF) as u8);
+        cpu.stkp -= 1;
+        io.write(0x0100 + (cpu.stkp as u16), (cpu.pc & 0x00FF) as u8);
+        cpu.stkp -= 1;
+
+        cpu.set_flag(Flags6502::B, true);
+        io.write(0x0100 + (cpu.stkp as u16), cpu.status);
+        cpu.stkp -= 1;
+        cpu.set_flag(Flags6502::B, false);
+
+        cpu.pc = io.read(0xFFFE) as u16 | ((io.read(0xFFFF) as u16) << 8);
+        0
+    }
+}
+
+pub struct BVC;
+impl ExecutableOperation for BVC {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        if cpu.get_flag(Flags6502::V) == 0 {
+            cpu.cycles += 1; // Maybe move to return value
+
+            cpu.addr_abs = cpu.pc + cpu.addr_rel;
+
+            if (cpu.addr_abs & 0xFF00) != (cpu.pc & 0xFF00) {
+                cpu.cycles += 1;
+            }
+
+            cpu.pc = cpu.addr_abs
+        }
+
+        0
+    }
+}
+
+
+pub struct BVS;
+impl ExecutableOperation for BVS {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        if cpu.get_flag(Flags6502::V) == 1 {
+            cpu.cycles += 1; // Maybe move to return value
+
+            cpu.addr_abs = cpu.pc + cpu.addr_rel;
+
+            if (cpu.addr_abs & 0xFF00) != (cpu.pc & 0xFF00) {
+                cpu.cycles += 1;
+            }
+
+            cpu.pc = cpu.addr_abs
+        }
+
+        0
+    }
+}
+
+
+pub struct CLC;
+impl ExecutableOperation for CLC {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.set_flag(Flags6502::C, false);
+        0
+    }
+}
+
+pub struct CLD;
+impl ExecutableOperation for CLD {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.set_flag(Flags6502::D, false);
+        0
+    }
+}
+
+
+pub struct CLI;
+impl ExecutableOperation for CLI {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.set_flag(Flags6502::I, false);
+        0
+    }
+}
+
+
+pub struct CLV;
+impl ExecutableOperation for CLV {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.set_flag(Flags6502::V, false);
+        0
+    }
+}
+
+
+pub struct CMP;
+impl ExecutableOperation for CMP {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.fetch(io);
+        cpu.temp = cpu.a as u16 - cpu.fetched as u16;
+
+        cpu.set_flag(Flags6502::C, cpu.a >= cpu.fetched);
+        cpu.set_flag(Flags6502::Z, (cpu.temp & 0x00FF) == 0x0000);
+        cpu.set_flag(Flags6502::N, (cpu.temp & 0x0080) != 0);
+        1
+    }
+}
+
+
+pub struct CPX;
+impl ExecutableOperation for CPX {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.fetch(io);
+        cpu.temp = cpu.x as u16 - cpu.fetched as u16;
+
+        cpu.set_flag(Flags6502::C, cpu.x >= cpu.fetched);
+        cpu.set_flag(Flags6502::Z, (cpu.temp & 0x00FF) == 0x0000);
+        cpu.set_flag(Flags6502::N, (cpu.temp & 0x0080) != 0);
+        0
+    }
+}
+
+
+pub struct CPY;
+impl ExecutableOperation for CPY {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.fetch(io);
+        cpu.temp = cpu.y as u16 - cpu.fetched as u16;
+
+        cpu.set_flag(Flags6502::C, cpu.y >= cpu.fetched);
+        cpu.set_flag(Flags6502::Z, (cpu.temp & 0x00FF) == 0x0000);
+        cpu.set_flag(Flags6502::N, (cpu.temp & 0x0080) != 0);
+        0
+    }
+}
+
+pub struct DEC;
+impl ExecutableOperation for DEC {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.fetch(io);
+        cpu.temp = (cpu.fetched - 1) as u16;
+        io.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8);
+        cpu.set_flag(Flags6502::Z, (cpu.temp & 0x00FF) == 0x0000);
+        cpu.set_flag(Flags6502::N, (cpu.temp & 0x0080) != 0);
+        0
+    }
+}
+
+
+pub struct DEX;
+impl ExecutableOperation for DEX {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.x -= 1;
+        cpu.set_flag(Flags6502::Z, cpu.x == 0x00);
+        cpu.set_flag(Flags6502::N, (cpu.x & 0x80) != 0);
+        0
+    }
+}
+
+pub struct DEY;
+impl ExecutableOperation for DEY {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.y -= 1;
+        cpu.set_flag(Flags6502::Z, cpu.y == 0x00);
+        cpu.set_flag(Flags6502::N, (cpu.y & 0x80) != 0);
+        0
+    }
+}
+
+
+pub struct EOR;
+impl ExecutableOperation for EOR {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.fetch(io);
+        cpu.a = cpu.a ^ cpu.fetched;
+        
+        cpu.set_flag(Flags6502::Z, cpu.a == 0x00);
+        cpu.set_flag(Flags6502::N, (cpu.a & 0x80) != 0);
+
+        1
+    }
+}
+
+
+pub struct INC;
+impl ExecutableOperation for INC {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.fetch(io);
+        
+        cpu.temp = (cpu.fetched as u16) + 1;
+        io.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8);
+        cpu.set_flag(Flags6502::Z, (cpu.temp & 0x00FF) == 0x0000);
+        cpu.set_flag(Flags6502::N, (cpu.temp & 0x0080) != 0);
+
+        0
+    }
+}
+
+
+pub struct INX;
+impl ExecutableOperation for INX {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.x += 1;
+        cpu.set_flag(Flags6502::Z, cpu.x == 0x00);
+        cpu.set_flag(Flags6502::N, (cpu.x & 0x80) != 0);
+
+        0
+    }
+}
+
+
+pub struct INY;
+impl ExecutableOperation for INY {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.y += 1;
+        cpu.set_flag(Flags6502::Z, cpu.y == 0x00);
+        cpu.set_flag(Flags6502::N, (cpu.y & 0x80) != 0);
+
+        0
+    }
+}
+
+
+pub struct JMP;
+impl ExecutableOperation for JMP {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.pc = cpu.addr_abs;
+        0
+    }
+}
+
+
+pub struct JSR;
+impl ExecutableOperation for JSR {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.pc -= 1;
+
+        io.write(0x0100 + (cpu.stkp as u16), ((cpu.pc >> 8) & 0x00FF) as u8);
+        cpu.stkp -= 1; 
+
+        io.write(0x0100 + (cpu.stkp as u16), (cpu.pc & 0x00FF) as u8);
+        cpu.stkp -= 1;
+
+        cpu.pc = cpu.addr_abs;
+        0
+    }
+}
+
+pub struct LDA;
+impl ExecutableOperation for LDA {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.fetch(io);
+
+        cpu.a = cpu.fetched;
+        cpu.set_flag(Flags6502::Z, cpu.a == 0x00);
+        cpu.set_flag(Flags6502::N, (cpu.a & 0x80) != 0);
+        1
+    }
+}
+
+
+pub struct LDX;
+impl ExecutableOperation for LDX {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.fetch(io);
+
+        cpu.x = cpu.fetched;
+        cpu.set_flag(Flags6502::Z, cpu.x == 0x00);
+        cpu.set_flag(Flags6502::N, (cpu.x & 0x80) != 0);
+        1
+    }
+}
+
+
+pub struct LDY;
+impl ExecutableOperation for LDY {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.fetch(io);
+
+        cpu.y = cpu.fetched;
+        cpu.set_flag(Flags6502::Z, cpu.y == 0x00);
+        cpu.set_flag(Flags6502::N, (cpu.y & 0x80) != 0);
+        1
+    }
+}
+
+
+pub struct LSR;
+impl ExecutableOperation for LSR {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.fetch(io);
+        cpu.set_flag(Flags6502::C, (cpu.fetched & 0x0001) != 0);
+        cpu.temp = (cpu.fetched >> 1) as u16;
+
+        cpu.set_flag(Flags6502::Z, (cpu.temp & 0x00FF) == 0x0000);
+        cpu.set_flag(Flags6502::N, (cpu.temp & 0x0080) != 0);
+
+        if matches!(Instruction::from_opcode(cpu.opcode).get_addrmode(), AddrMode::IMP) {
+            cpu.a = (cpu.temp & 0x00FF) as u8;
+        } else {
+            io.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8)
+        }
+
+        0
+    }
+}
+
+
+
+pub struct NOP;
+impl ExecutableOperation for NOP {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+
+       // Not all nops are equal 
+       // TODO: Implement illegal opcodes 
+
+        let extra = match cpu.opcode {
+           0x1C | 0x3C | 0x5C | 0x7C | 0xDC | 0xFC => 1,
+           _ => 0 
+        };
+
+        extra
+    }
+}
+
+
+pub struct ORA;
+impl ExecutableOperation for ORA {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.fetch(io);
+        cpu.a = cpu.a | cpu.fetched;
+
+        cpu.set_flag(Flags6502::Z, cpu.a == 0x00);
+        cpu.set_flag(Flags6502::N, (cpu.a & 0x80) != 0);
+
+        1
+    }
+}
+
+pub struct PHA;
+impl ExecutableOperation for PHA {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        io.write(0x0100 + (cpu.stkp as u16), cpu.a);
+        cpu.stkp -= 1;
+        0
+    }
+}
+
+
+pub struct PHP;
+impl ExecutableOperation for PHP {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        io.write(0x0100 + (cpu.stkp as u16), cpu.status | Flags6502::B.0 | Flags6502::U.0);
+        cpu.set_flag(Flags6502::B, false);
+        cpu.set_flag(Flags6502::U, false);
+
+        cpu.stkp -= 1;
+        0
+    }
+}
+
+
+pub struct PLA;
+impl ExecutableOperation for PLA {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.stkp += 1;
+        cpu.a = io.read(0x0100 + (cpu.stkp as u16));
+
+        cpu.set_flag(Flags6502::Z, cpu.a == 0x00);
+        cpu.set_flag(Flags6502::N, (cpu.a & 0x80) != 0);
+
+        0
+    }
+}
+
+
+pub struct PLP;
+impl ExecutableOperation for PLP {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.stkp += 1;
+        cpu.status = io.read(0x0100 + (cpu.stkp as u16));
+
+        cpu.set_flag(Flags6502::U, true);
+
+        0
+    }
+}
+
+
+pub struct ROL;
+impl ExecutableOperation for ROL {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.fetch(io);
+        cpu.temp = ((cpu.fetched << 1) as u16) | (cpu.get_flag(Flags6502::C) as u16);
+
+        cpu.set_flag(Flags6502::C, (cpu.temp & 0xFF00) != 0x0000);
+        cpu.set_flag(Flags6502::Z, (cpu.temp & 0x00FF) == 0x0000);
+        cpu.set_flag(Flags6502::N, (cpu.temp & 0x0080) != 0x0000);
+
+        if matches!(Instruction::from_opcode(cpu.opcode).get_addrmode(), AddrMode::IMP) {
+            cpu.a = (cpu.temp & 0x00FF) as u8;
+        } else {
+            io.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8)
+        }
+
+        0
+    }
+}
+
+
+pub struct ROR;
+impl ExecutableOperation for ROR {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.fetch(io);
+        cpu.temp = ((cpu.get_flag(Flags6502::C) << 7) as u16) | ((cpu.fetched >> 1) as u16);
+
+        cpu.set_flag(Flags6502::C, (cpu.fetched & 0x01) != 0x00);
+        cpu.set_flag(Flags6502::Z, (cpu.temp & 0x00FF) == 0x0000);
+        cpu.set_flag(Flags6502::N, (cpu.temp & 0x0080) != 0x0000);
+
+        if matches!(Instruction::from_opcode(cpu.opcode).get_addrmode(), AddrMode::IMP) {
+            cpu.a = (cpu.temp & 0x00FF) as u8;
+        } else {
+            io.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8)
+        }
+
+        0
+    }
+}
+
+
+pub struct RTI;
+impl ExecutableOperation for RTI {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.stkp += 1;
+        cpu.status = io.read(0x0100 + (cpu.stkp as u16));
+        cpu.status &= !Flags6502::B.0;
+        cpu.status &= !Flags6502::U.0;
+
+        cpu.stkp += 1;
+        cpu.pc = io.read(0x0100 + (cpu.stkp as u16)) as u16;
+        cpu.stkp += 1;
+        cpu.pc |= (io.read(0x0100 + (cpu.stkp as u16)) as u16) << 8;
+        0
+    }
+}
+
+
+pub struct RTS;
+impl ExecutableOperation for RTS {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.stkp += 1;
+        cpu.pc = io.read(0x0100 + (cpu.stkp as u16)) as u16;
+        cpu.stkp += 1;
+        cpu.pc |= (io.read(0x0100 + (cpu.stkp as u16)) as u16) << 8;
+
+        cpu.pc += 1;
+        0
+    }
+}
+
+
+pub struct SEC;
+impl ExecutableOperation for SEC {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.set_flag(Flags6502::C, true);
+        0
+    }
+}
+
+
+pub struct SED;
+impl ExecutableOperation for SED {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.set_flag(Flags6502::D, true);
+        0
+    }
+}
+
+pub struct SEI;
+impl ExecutableOperation for SEI {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.set_flag(Flags6502::I, true);
+        0
+    }
+}
+
+
+pub struct STA;
+impl ExecutableOperation for STA {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        io.write(cpu.addr_abs, cpu.a);
+        0
+    }
+}
+
+
+pub struct STX;
+impl ExecutableOperation for STX {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        io.write(cpu.addr_abs, cpu.x);
+        0
+    }
+}
+
+
+pub struct STY;
+impl ExecutableOperation for STY {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        io.write(cpu.addr_abs, cpu.y);
+        0
+    }
+}
+
+
+pub struct TAX;
+impl ExecutableOperation for TAX {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.x = cpu.a;
+        cpu.set_flag(Flags6502::Z, cpu.x == 0x00);
+        cpu.set_flag(Flags6502::N, (cpu.x & 0x80) != 0);
+        0
+    }
+}
+
+
+pub struct TAY;
+impl ExecutableOperation for TAY {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.y = cpu.a;
+        cpu.set_flag(Flags6502::Z, cpu.y == 0x00);
+        cpu.set_flag(Flags6502::N, (cpu.y & 0x80) != 0);
+        0
+    }
+}
+
+pub struct TSX;
+impl ExecutableOperation for TSX {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.x = cpu.stkp;
+        cpu.set_flag(Flags6502::Z, cpu.x == 0x00);
+        cpu.set_flag(Flags6502::N, (cpu.x & 0x80) != 0);
+        0
+    }
+}
+
+pub struct TXA;
+impl ExecutableOperation for TXA {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.a = cpu.x;
+        cpu.set_flag(Flags6502::Z, cpu.a == 0x00);
+        cpu.set_flag(Flags6502::N, (cpu.a & 0x80) != 0);
+        0
+    }
+}
+
+pub struct TXS;
+impl ExecutableOperation for TXS {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.stkp = cpu.x;
+        0
+    }
+}
+
+
+pub struct TYA;
+impl ExecutableOperation for TYA {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        cpu.a = cpu.y;
+        cpu.set_flag(Flags6502::Z, cpu.a == 0x00);
+        cpu.set_flag(Flags6502::N, (cpu.a & 0x80) != 0);
+        0
+    }
+}
+
+
+pub struct XXX;
+impl ExecutableOperation for XXX {
+   
+    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+        0
+    }
+}

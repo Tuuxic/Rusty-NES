@@ -4,7 +4,7 @@ use std::
 
 use crate::{
     bus_mod::bus::CpuRAM,
-    cpu_mod::{cpu::Cpu, cpu6502::Cpu6502}, iodevice::IODevice,
+    cpu_mod::{cpu::Cpu, cpu6502::Cpu6502, instruction::Instruction}, iodevice::IODevice,
 };
 
 pub const FRAME_LENGTH: Duration = Duration::from_millis(500); // Duration::new(0, 16_666_666);
@@ -35,8 +35,14 @@ impl Nes {
         }
     }
 
+    pub fn reset(&mut self) {
+
+        let mut io = IODevice::new(&mut self.ram); 
+        self.cpu.reset(&mut io)
+    }
+
     pub fn get_debug(&self) -> String {
-        let mut str: String = String::from(self.cpu.opcode.to_string());
+        let mut str: String = String::from(Instruction::from_opcode(self.cpu.opcode).get_name());
         str.push_str(" a = ");
         str.push_str(&self.cpu.a.to_string());
 
@@ -48,6 +54,9 @@ impl Nes {
 
         str.push_str(" cycle = ");
         str.push_str(&self.cpu.cycles.to_string());
+
+        str.push_str(" pc = ");
+        str.push_str(&self.cpu.pc.to_string());
 
         str
     }
