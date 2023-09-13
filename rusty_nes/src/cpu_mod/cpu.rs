@@ -1,5 +1,5 @@
 
-use crate::{bus_mod::bus::CpuRAM, iodevice::IODevice};
+use crate::iodevice::IODevice;
 
 use super::flags6502::Flags6502;
 
@@ -7,8 +7,7 @@ pub trait Cpu {
     fn reset(&mut self);
     fn irq(&mut self);
     fn nmi(&mut self);
-    fn clock(&mut self, bus: &mut CpuRAM);
-    fn clock_io(&mut self, io: &mut IODevice);
+    fn clock(&mut self, io: &mut IODevice);
 
     // fn completed_instruction(&mut self) -> bool;
 

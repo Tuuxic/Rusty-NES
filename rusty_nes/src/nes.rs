@@ -55,6 +55,6 @@ impl Nes {
     fn clock(&mut self) {
         let mut io = IODevice::new(&mut self.ram); 
         // self.cpu.clock(&mut self.ram);
-        self.cpu.clock_io(&mut io);
+        self.cpu.clock(&mut io);
     }
 }

@@ -19,6 +19,8 @@ pub struct Cpu6502 {
 
     pub status: u8,
 
+    // internal helper
+
     pub fetched: u8,
 
     pub temp: u16,
@@ -159,38 +161,6 @@ impl Cpu for Cpu6502 {
         self.pc = (hi << 8) | lo;
 
         self.cycles = 8;
-    }
-
-    fn clock(&mut self, bus: &mut CpuRAM) {
-        if self.cycles <= 0 {
-            println!("pc = {}", self.pc);
-
-            self.opcode = bus.read(self.pc);
-
-            self.set_flag(Flags6502::U, true);
-
-            self.pc += 1;
-
-            let instr: Instruction = Instruction::from_opcode(self.opcode);
-
-            self.cycles = instr.get_cycles();
-
-            let add_cycles1: u8 = instr.execute_addmode(self, bus); // lookup
-
-            let add_cycles2: u8 = instr.execute_operator(self, bus); // lookup
-
-            self.cycles += add_cycles1 & add_cycles2;
-
-            self.set_flag(Flags6502::U, true);
-        }
-
-        self.clock_count += 1;
-
-        if self.cycles != 0 {
-            self.cycles -= 1;
-        }
-
-        println!("cycle = {}", self.cycles);
     }
 
     fn get_flag(&self, flag: Flags6502) -> u8 {
@@ -615,10 +585,9 @@ impl Cpu for Cpu6502 {
         todo!()
     }
 
-    fn clock_io(&mut self, io: &mut IODevice) {
+    fn clock(&mut self, io: &mut IODevice) {
 
         if self.cycles <= 0 {
-            println!("pc = {}", self.pc);
 
             self.opcode = io.read(self.pc);
 
@@ -630,9 +599,9 @@ impl Cpu for Cpu6502 {
 
             self.cycles = instr.get_cycles();
 
-            let add_cycles1: u8 = instr.execute_addmode_io(self, io); // lookup
+            let add_cycles1: u8 = instr.execute_addmode(self, io); // lookup
 
-            let add_cycles2: u8 = instr.execute_operator_io(self, io); // lookup
+            let add_cycles2: u8 = instr.execute_operator(self, io); // lookup
 
             self.cycles += add_cycles1 & add_cycles2;
 
