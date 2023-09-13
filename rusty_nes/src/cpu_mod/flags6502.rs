@@ -1,5 +1,3 @@
-
-
 pub struct Flags6502(pub u8);
 
 impl Flags6502 {

@@ -1,52 +1,67 @@
-// use crate::bus_mod::bus::Bus;
-use super::{instruction::Instruction, cpu::Cpu, flags6502::Flags6502};
+use crate::{iodevice::IODevice, bus_mod::bus::CpuRAM};
 
+use super::{
+    cpu::Cpu,
+    flags6502::Flags6502,
+    instruction::Instruction,
+};
 
 pub struct Cpu6502 {
-    a: u8,
-    x: u8,
-    y: u8,
-    stkp: u8,
-    pc: u16,
-    status: u8,
-    //bus: Bus,
-    instruction_lookup: Vec<Instruction>,
+    pub a: u8,
 
-    fetched: u8,
-    temp: u16,
-    addr_abs: u16,
-    addr_rel: u16,
-    opcode: u8,
-    cycles: u8,
-    clock_count: u32,
+    pub x: u8,
 
-    write_callback: fn(u16, u8),
-    read_callback: fn(u16) -> u8 
-    
+    pub y: u8,
+
+    pub stkp: u8,
+
+    pub pc: u16,
+
+    pub status: u8,
+
+    pub fetched: u8,
+
+    pub temp: u16,
+
+    pub addr_abs: u16,
+
+    pub addr_rel: u16,
+
+    pub opcode: u8,
+
+    pub cycles: u8,
+
+    pub clock_count: u32,
 }
 
 impl Cpu6502 {
-    pub fn new(write_callback:fn(u16, u8), read_callback:fn(u16) -> u8) -> Cpu6502 {
+    pub fn new() -> Cpu6502 {
         Cpu6502 {
             a: 0x00,
-            x: 0x00,
-            y: 0x00,
-            stkp: 0x00,
-            pc: 0x0000,
-            status: 0x00,
-            write_callback, 
-            read_callback,
 
-            //bus: Bus::new(),
-            instruction_lookup: vec![],
+            x: 0x00,
+
+            y: 0x00,
+
+            stkp: 0x00,
+
+            pc: 0x0000,
+
+            status: 0x00,
 
             fetched: 0x00,
+
             temp: 0x0000,
+
             addr_abs: 0x0000,
+
             addr_rel: 0x0000,
+
             opcode: 0x00,
+
             cycles: 0,
-            clock_count: 0
+
+            clock_count: 0,
         }
     }
 }
@@ -54,19 +69,27 @@ impl Cpu6502 {
 impl Cpu for Cpu6502 {
     fn reset(&mut self) {
         self.addr_abs = 0xFFFC;
+
         let lo: u16 = self.read_from_bus(self.addr_abs + 0) as u16;
+
         let hi: u16 = self.read_from_bus(self.addr_abs + 1) as u16;
 
         self.pc = (hi << 8) | lo;
 
         self.a = 0;
+
         self.x = 0;
+
         self.y = 0;
+
         self.stkp = 0xFD;
+
         self.status = (0x00 | lo) as u8;
 
         self.addr_rel = 0x0000;
+
         self.addr_abs = 0x0000;
+
         self.fetched = 0x00;
 
         self.cycles = 0;
@@ -78,84 +101,116 @@ impl Cpu for Cpu6502 {
         }
 
         // Save PC on stack
+
         self.write_to_bus(0x0100 + (self.stkp as u16), ((self.pc >> 8) & 0x00FF) as u8);
+
         self.stkp -= 1;
+
         self.write_to_bus(0x0100 + (self.stkp as u16), (self.pc & 0x00FF) as u8);
+
         self.stkp -= 1;
- 
+
         self.set_flag(Flags6502::B, false);
+
         self.set_flag(Flags6502::U, true);
+
         self.set_flag(Flags6502::I, true);
 
         self.write_to_bus(0x0100 + (self.stkp as u16), self.status);
+
         self.stkp -= 1;
 
         self.addr_abs = 0xFFFE;
-        let lo: u16 = self.read_from_bus(self.addr_abs) as u16;
-        let hi: u16 = self.read_from_bus(self.addr_abs + 1) as u16;
-        self.pc = (hi << 8) | lo;
-        self.cycles = 7;
 
+        let lo: u16 = self.read_from_bus(self.addr_abs) as u16;
+
+        let hi: u16 = self.read_from_bus(self.addr_abs + 1) as u16;
+
+        self.pc = (hi << 8) | lo;
+
+        self.cycles = 7;
     }
 
     fn nmi(&mut self) {
-
         self.write_to_bus(0x0100 + (self.stkp as u16), ((self.pc >> 8) & 0x00FF) as u8);
+
         self.stkp -= 1;
+
         self.write_to_bus(0x0100 + (self.stkp as u16), (self.pc & 0x00FF) as u8);
+
         self.stkp -= 1;
 
         self.set_flag(Flags6502::B, false);
+
         self.set_flag(Flags6502::U, true);
+
         self.set_flag(Flags6502::I, true);
 
         self.write_to_bus(0x0100 + (self.stkp as u16), self.status);
+
         self.stkp -= 1;
 
         self.addr_abs = 0xFFFA;
+
         let lo: u16 = self.read_from_bus(self.addr_abs) as u16;
+
         let hi: u16 = self.read_from_bus(self.addr_abs + 1) as u16;
+
         self.pc = (hi << 8) | lo;
 
         self.cycles = 8;
     }
 
-    fn clock(&mut self) {
-        todo!()
-    }
+    fn clock(&mut self, bus: &mut CpuRAM) {
+        if self.cycles <= 0 {
+            println!("pc = {}", self.pc);
 
-    fn completed_instruction(&mut self) -> bool {
-        todo!()
-    }
+            self.opcode = bus.read(self.pc);
 
-    fn connect_bus(&mut self, bus: &crate::bus_mod::bus::Bus) {
-        todo!()
-    }
+            self.set_flag(Flags6502::U, true);
 
-    fn dissassemble(&self, start: u8, end: u8) -> std::iter::Map<u8, String> {
-        todo!()
+            self.pc += 1;
+
+            let instr: Instruction = Instruction::from_opcode(self.opcode);
+
+            self.cycles = instr.get_cycles();
+
+            let add_cycles1: u8 = instr.execute_addmode(self, bus); // lookup
+
+            let add_cycles2: u8 = instr.execute_operator(self, bus); // lookup
+
+            self.cycles += add_cycles1 & add_cycles2;
+
+            self.set_flag(Flags6502::U, true);
+        }
+
+        self.clock_count += 1;
+
+        if self.cycles != 0 {
+            self.cycles -= 1;
+        }
+
+        println!("cycle = {}", self.cycles);
     }
 
     fn get_flag(&self, flag: Flags6502) -> u8 {
         let Flags6502(mask) = flag;
-        if self.status & mask > 0 {1} else {0}
+
+        if self.status & mask > 0 {
+            1
+        } else {
+            0
+        }
     }
 
     fn set_flag(&mut self, flag: Flags6502, value: bool) {
         let Flags6502(mask) = flag;
+
         if value {
-            self.status |= mask; 
+            self.status |= mask;
         } else {
             self.status &= !mask;
         }
-    }
-
-    fn read_from_bus(&self, addr: u16) -> u8 {
-        (self.read_callback)(addr)
-    }
-
-    fn write_to_bus(&mut self, addr: u16, data: u8) {
-        (self.write_callback)(addr, data);
     }
 
     fn fetch(&self) {
@@ -163,63 +218,88 @@ impl Cpu for Cpu6502 {
     }
 
     fn imp(&mut self) -> u8 {
-       self.fetched = self.a;
-       0 
+        self.fetched = self.a;
+
+        0
     }
 
     fn imm(&mut self) -> u8 {
         self.addr_abs = self.pc;
+
         self.pc += 1;
+
         0
     }
 
     fn zp0(&mut self) -> u8 {
         self.addr_abs = self.read_from_bus(self.pc) as u16;
+
         self.pc += 1;
+
         self.addr_abs &= 0x00FF;
+
         0
     }
 
     fn zpx(&mut self) -> u8 {
         self.addr_abs = (self.read_from_bus(self.pc) + self.x) as u16;
+
         self.pc += 1;
+
         self.addr_abs &= 0x00FF;
+
         0
     }
 
     fn zpy(&mut self) -> u8 {
         self.addr_abs = (self.read_from_bus(self.pc) + self.y) as u16;
+
         self.pc += 1;
+
         self.addr_abs &= 0x00FF;
+
         0
     }
 
     fn rel(&mut self) -> u8 {
         self.addr_rel = self.read_from_bus(self.pc) as u16;
+
         self.pc += 1;
+
         if (self.addr_rel & 0x80) != 0 {
             self.addr_rel |= 0xFF00;
         }
+
         0
     }
 
     fn abs(&mut self) -> u8 {
-        let lo : u16 = self.read_from_bus(self.pc) as u16;
+        let lo: u16 = self.read_from_bus(self.pc) as u16;
+
         self.pc += 1;
-        let hi : u16 = self.read_from_bus(self.pc) as u16 ;
+
+        let hi: u16 = self.read_from_bus(self.pc) as u16;
+
         self.pc += 1;
+
         self.addr_abs = (hi << 8) | lo;
+
         0
     }
 
     fn abx(&mut self) -> u8 {
-        let lo : u16 = self.read_from_bus(self.pc) as u16;
+        let lo: u16 = self.read_from_bus(self.pc) as u16;
+
         self.pc += 1;
-        let hi : u16 = self.read_from_bus(self.pc) as u16 ;
+
+        let hi: u16 = self.read_from_bus(self.pc) as u16;
+
         self.pc += 1;
+
         self.addr_abs = (hi << 8) | lo;
 
         self.addr_abs += self.x as u16;
+
         if (hi << 8) != (self.addr_abs & 0xFF00) {
             1
         } else {
@@ -228,14 +308,18 @@ impl Cpu for Cpu6502 {
     }
 
     fn aby(&mut self) -> u8 {
+        let lo: u16 = self.read_from_bus(self.pc) as u16;
 
-        let lo : u16 = self.read_from_bus(self.pc) as u16;
         self.pc += 1;
-        let hi : u16 = self.read_from_bus(self.pc) as u16 ;
+
+        let hi: u16 = self.read_from_bus(self.pc) as u16;
+
         self.pc += 1;
+
         self.addr_abs = (hi << 8) | lo;
 
         self.addr_abs += self.y as u16;
+
         if (hi << 8) != (self.addr_abs & 0xFF00) {
             1
         } else {
@@ -245,43 +329,57 @@ impl Cpu for Cpu6502 {
 
     fn ind(&mut self) -> u8 {
         let ptr_lo: u16 = self.read_from_bus(self.pc) as u16;
-        self.pc += 1;
-        let ptr_hi: u16 = self.read_from_bus(self.pc) as u16;
+
         self.pc += 1;
 
-        let ptr: u16 = (ptr_hi << 8) | ptr_lo; 
+        let ptr_hi: u16 = self.read_from_bus(self.pc) as u16;
+
+        self.pc += 1;
+
+        let ptr: u16 = (ptr_hi << 8) | ptr_lo;
 
         if ptr_lo == 0x00FF {
             let hi: u16 = self.read_from_bus(ptr & 0xFF00) as u16;
+
             let lo: u16 = self.read_from_bus(ptr) as u16;
+
             self.addr_abs = (hi << 8) | lo;
-        } else {    
+        } else {
             let hi: u16 = self.read_from_bus(ptr + 1) as u16;
+
             let lo: u16 = self.read_from_bus(ptr) as u16;
+
             self.addr_abs = (hi << 8) | lo;
-        } 
+        }
 
         0
     }
 
     fn izx(&mut self) -> u8 {
-        let t:u16 = self.read_from_bus(self.pc) as u16;
+        let t: u16 = self.read_from_bus(self.pc) as u16;
+
         self.pc += 1;
+
         let lo: u16 = self.read_from_bus(((t + (self.x as u16)) as u16) & 0x00FF) as u16;
+
         let hi: u16 = self.read_from_bus(((t + (self.x as u16) + 1) as u16) & 0x00FF) as u16;
 
         self.addr_abs = (hi << 8) | lo;
+
         0
     }
 
     fn izy(&mut self) -> u8 {
         let t: u16 = self.read_from_bus(self.pc) as u16;
+
         self.pc += 1;
 
         let lo: u16 = self.read_from_bus(t & 0x00FF) as u16;
+
         let hi: u16 = self.read_from_bus((t + 1) & 0x00FF) as u16;
 
         self.addr_abs = (hi << 8) | lo;
+
         self.addr_abs += self.y as u16;
 
         if (self.addr_abs & 0xFF00) != (hi << 8) {
@@ -289,7 +387,6 @@ impl Cpu for Cpu6502 {
         } else {
             0
         }
-
     }
 
     //Operators
@@ -516,5 +613,50 @@ impl Cpu for Cpu6502 {
 
     fn tya(&mut self) -> u8 {
         todo!()
+    }
+
+    fn clock_io(&mut self, io: &mut IODevice) {
+
+        if self.cycles <= 0 {
+            println!("pc = {}", self.pc);
+
+            self.opcode = io.read(self.pc);
+
+            self.set_flag(Flags6502::U, true);
+
+            self.pc += 1;
+
+            let instr: Instruction = Instruction::from_opcode(self.opcode);
+
+            self.cycles = instr.get_cycles();
+
+            let add_cycles1: u8 = instr.execute_addmode_io(self, io); // lookup
+
+            let add_cycles2: u8 = instr.execute_operator_io(self, io); // lookup
+
+            self.cycles += add_cycles1 & add_cycles2;
+
+            self.set_flag(Flags6502::U, true);
+        }
+
+        self.clock_count += 1;
+
+        if self.cycles != 0 {
+            self.cycles -= 1;
+        }
+
+        println!("cycle = {}", self.cycles);
+
+
+    }
+
+
+
+    fn read_from_bus(&self, addr: u16) -> u8 {
+        0
+    }
+
+    fn write_to_bus(&mut self, addr: u16, data: u8) {
+
     }
 }

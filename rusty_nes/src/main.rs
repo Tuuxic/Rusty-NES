@@ -1,23 +1,22 @@
 mod bus_mod;
 mod cpu_mod;
 mod nes;
+mod iodevice;
 
 use ggez::event;
-use ggez::{Context, GameResult, GameError, ContextBuilder};
+use ggez::{Context, ContextBuilder, GameError, GameResult};
 use nes::Nes;
 
-const GAME_ID : &str = "RustyNes";
-const AUTHOR_NAME : &str = "Nikolai Prjanikov";
+const GAME_ID: &str = "RustyNes";
+const AUTHOR_NAME: &str = "Nikolai Prjanikov";
 
 struct MainState {
-    nes: Nes
+    nes: Nes,
 }
 
 impl MainState {
     fn new() -> GameResult<MainState> {
-        let s: MainState = MainState {
-            nes: Nes::new()
-        };
+        let s: MainState = MainState { nes: Nes::new() };
         Ok(s)
     }
 }
@@ -31,7 +30,6 @@ impl event::EventHandler<GameError> for MainState {
     fn draw(&mut self, _ctx: &mut Context) -> Result<(), GameError> {
         Ok(())
     }
-
 }
 
 fn main() -> GameResult {
