@@ -35,6 +35,23 @@ impl Nes {
         }
     }
 
+    pub fn get_debug(&self) -> String {
+        let mut str: String = String::from(self.cpu.opcode.to_string());
+        str.push_str(" a = ");
+        str.push_str(&self.cpu.a.to_string());
+
+        str.push_str(" x = ");
+        str.push_str(&self.cpu.x.to_string());
+
+        str.push_str(" y = ");
+        str.push_str(&self.cpu.y.to_string());
+
+        str.push_str(" cycle = ");
+        str.push_str(&self.cpu.cycles.to_string());
+
+        str
+    }
+
     fn clock(&mut self) {
         let mut io = IODevice::new(&mut self.ram); 
         // self.cpu.clock(&mut self.ram);

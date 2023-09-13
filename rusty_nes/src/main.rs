@@ -3,7 +3,8 @@ mod cpu_mod;
 mod nes;
 mod iodevice;
 
-use ggez::event;
+use ggez::glam::Vec2;
+use ggez::{event, graphics};
 use ggez::{Context, ContextBuilder, GameError, GameResult};
 use nes::Nes;
 
@@ -28,6 +29,15 @@ impl event::EventHandler<GameError> for MainState {
     }
 
     fn draw(&mut self, _ctx: &mut Context) -> Result<(), GameError> {
+        let mut canvas = graphics::Canvas::from_frame(
+            _ctx,
+            graphics::Color::from([0.1, 0.2, 0.3, 0.1])
+        );
+        let str: String = self.nes.get_debug();
+        let text = graphics::Text::new(str);
+
+        canvas.draw(&text, Vec2::new(10.0, 10.0));
+        canvas.finish(_ctx)?;
         Ok(())
     }
 }
