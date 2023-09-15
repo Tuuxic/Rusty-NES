@@ -3,7 +3,7 @@ use crate::iodevice::IODevice;
 use super::{
     cpu::Cpu,
     flags6502::Flags6502,
-    instruction::{Instruction, AddrMode},
+    instruction::{AddrMode, Instruction},
 };
 
 pub struct Cpu6502 {
@@ -20,7 +20,6 @@ pub struct Cpu6502 {
     pub status: u8,
 
     // internal helper
-
     pub fetched: u8,
 
     pub temp: u16,
@@ -183,17 +182,18 @@ impl Cpu for Cpu6502 {
         }
     }
 
-    fn fetch(&mut self, io: &mut IODevice) -> u8{
-        if !matches!(Instruction::from_opcode(self.opcode).get_addrmode(), AddrMode::IMP) {
+    fn fetch(&mut self, io: &mut IODevice) -> u8 {
+        if !matches!(
+            Instruction::from_opcode(self.opcode).get_addrmode(),
+            AddrMode::IMP
+        ) {
             self.fetched = io.read(self.addr_abs);
         }
         self.fetched
     }
 
     fn clock(&mut self, io: &mut IODevice) {
-
         if self.cycles <= 0 {
-
             self.opcode = io.read(self.pc);
 
             self.set_flag(Flags6502::U, true);
@@ -218,7 +218,5 @@ impl Cpu for Cpu6502 {
         if self.cycles != 0 {
             self.cycles -= 1;
         }
-
     }
-
 }

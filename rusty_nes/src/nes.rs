@@ -1,10 +1,9 @@
-use std::
-    time::Duration
-;
+use std::time::Duration;
 
 use crate::{
     bus_mod::bus::CpuRAM,
-    cpu_mod::{cpu::Cpu, cpu6502::Cpu6502, instruction::Instruction}, iodevice::IODevice,
+    cpu_mod::{cpu::Cpu, cpu6502::Cpu6502, instruction::Instruction},
+    iodevice::IODevice,
 };
 
 pub const FRAME_LENGTH: Duration = Duration::from_millis(500); // Duration::new(0, 16_666_666);
@@ -36,8 +35,7 @@ impl Nes {
     }
 
     pub fn reset(&mut self) {
-
-        let mut io = IODevice::new(&mut self.ram); 
+        let mut io = IODevice::new(&mut self.ram);
         self.cpu.reset(&mut io)
     }
 
@@ -62,7 +60,7 @@ impl Nes {
     }
 
     fn clock(&mut self) {
-        let mut io = IODevice::new(&mut self.ram); 
+        let mut io = IODevice::new(&mut self.ram);
         // self.cpu.clock(&mut self.ram);
         self.cpu.clock(&mut io);
     }

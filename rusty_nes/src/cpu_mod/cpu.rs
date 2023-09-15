@@ -1,4 +1,3 @@
-
 use crate::iodevice::IODevice;
 
 use super::flags6502::Flags6502;
@@ -17,5 +16,4 @@ pub trait Cpu {
     fn set_flag(&mut self, flag: Flags6502, value: bool);
 
     fn fetch(&mut self, io: &mut IODevice) -> u8;
-
 }
