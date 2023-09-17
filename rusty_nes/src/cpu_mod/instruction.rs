@@ -291,7 +291,6 @@ impl Instruction {
             253 => Instruction::new("SBC", Box::new(SBC), Box::new(ABX), AddrMode::ABX, 4),
             254 => Instruction::new("INC", Box::new(INC), Box::new(ABX), AddrMode::ABX, 7),
             255 => Instruction::new("???", Box::new(XXX), Box::new(IMP), AddrMode::IMP, 7),
-            _ => Instruction::new("XXX", Box::new(XXX), Box::new(IMP), AddrMode::IMP, 7),
         }
     }
     /*
@@ -321,6 +320,10 @@ impl Instruction {
     pub fn get_addrmode(&self) -> AddrMode {
         self.addrtype
     }
+
+    pub fn opcode_to_addrmode(opcode: u8) -> AddrMode {
+        return Instruction::from_opcode(opcode).get_addrmode();
+    }
 }
 
 pub trait ExecutableOperation {
@@ -347,24 +350,15 @@ pub enum AddrMode {
 // Addressing Modes
 pub struct IMP;
 impl ExecutableOperation for IMP {
-    /*
-    fn execute(&self, cpu: &mut Cpu6502, bus: &mut CpuRAM) -> u8 {
-        println!("IMP executed");
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.fetched = cpu.a;
-        bus.write(0x0, 0x0);
-        0
-    }
-    */
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
-        cpu.fetched = cpu.a;
-        io.write(0x0, 0x0);
         0
     }
 }
 
 pub struct IMM;
 impl ExecutableOperation for IMM {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.addr_abs = cpu.pc;
         cpu.pc += 1;
         0
@@ -637,7 +631,7 @@ impl ExecutableOperation for ASL {
 
 pub struct BCC;
 impl ExecutableOperation for BCC {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         if cpu.get_flag(Flags6502::C) == 0 {
             cpu.cycles += 1; // Maybe move to return value
 
@@ -656,7 +650,7 @@ impl ExecutableOperation for BCC {
 
 pub struct BCS;
 impl ExecutableOperation for BCS {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         if cpu.get_flag(Flags6502::C) == 1 {
             cpu.cycles += 1; // Maybe move to return value
 
@@ -675,7 +669,7 @@ impl ExecutableOperation for BCS {
 
 pub struct BEQ;
 impl ExecutableOperation for BEQ {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         if cpu.get_flag(Flags6502::Z) == 1 {
             cpu.cycles += 1; // Maybe move to return value
 
@@ -709,7 +703,7 @@ impl ExecutableOperation for BIT {
 
 pub struct BMI;
 impl ExecutableOperation for BMI {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         if cpu.get_flag(Flags6502::N) == 1 {
             cpu.cycles += 1; // Maybe move to return value
 
@@ -728,7 +722,7 @@ impl ExecutableOperation for BMI {
 
 pub struct BNE;
 impl ExecutableOperation for BNE {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         if cpu.get_flag(Flags6502::Z) == 0 {
             cpu.cycles += 1; // Maybe move to return value
 
@@ -747,7 +741,7 @@ impl ExecutableOperation for BNE {
 
 pub struct BPL;
 impl ExecutableOperation for BPL {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         if cpu.get_flag(Flags6502::N) == 0 {
             cpu.cycles += 1; // Maybe move to return value
 
@@ -787,7 +781,7 @@ impl ExecutableOperation for BRK {
 
 pub struct BVC;
 impl ExecutableOperation for BVC {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         if cpu.get_flag(Flags6502::V) == 0 {
             cpu.cycles += 1; // Maybe move to return value
 
@@ -806,7 +800,7 @@ impl ExecutableOperation for BVC {
 
 pub struct BVS;
 impl ExecutableOperation for BVS {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         if cpu.get_flag(Flags6502::V) == 1 {
             cpu.cycles += 1; // Maybe move to return value
 
@@ -825,7 +819,7 @@ impl ExecutableOperation for BVS {
 
 pub struct CLC;
 impl ExecutableOperation for CLC {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.set_flag(Flags6502::C, false);
         0
     }
@@ -833,7 +827,7 @@ impl ExecutableOperation for CLC {
 
 pub struct CLD;
 impl ExecutableOperation for CLD {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.set_flag(Flags6502::D, false);
         0
     }
@@ -841,7 +835,7 @@ impl ExecutableOperation for CLD {
 
 pub struct CLI;
 impl ExecutableOperation for CLI {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.set_flag(Flags6502::I, false);
         0
     }
@@ -849,7 +843,7 @@ impl ExecutableOperation for CLI {
 
 pub struct CLV;
 impl ExecutableOperation for CLV {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.set_flag(Flags6502::V, false);
         0
     }
@@ -908,7 +902,7 @@ impl ExecutableOperation for DEC {
 
 pub struct DEX;
 impl ExecutableOperation for DEX {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.x -= 1;
         cpu.set_flag(Flags6502::Z, cpu.x == 0x00);
         cpu.set_flag(Flags6502::N, (cpu.x & 0x80) != 0);
@@ -918,7 +912,7 @@ impl ExecutableOperation for DEX {
 
 pub struct DEY;
 impl ExecutableOperation for DEY {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.y -= 1;
         cpu.set_flag(Flags6502::Z, cpu.y == 0x00);
         cpu.set_flag(Flags6502::N, (cpu.y & 0x80) != 0);
@@ -955,7 +949,7 @@ impl ExecutableOperation for INC {
 
 pub struct INX;
 impl ExecutableOperation for INX {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.x += 1;
         cpu.set_flag(Flags6502::Z, cpu.x == 0x00);
         cpu.set_flag(Flags6502::N, (cpu.x & 0x80) != 0);
@@ -966,7 +960,7 @@ impl ExecutableOperation for INX {
 
 pub struct INY;
 impl ExecutableOperation for INY {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.y += 1;
         cpu.set_flag(Flags6502::Z, cpu.y == 0x00);
         cpu.set_flag(Flags6502::N, (cpu.y & 0x80) != 0);
@@ -977,7 +971,7 @@ impl ExecutableOperation for INY {
 
 pub struct JMP;
 impl ExecutableOperation for JMP {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.pc = cpu.addr_abs;
         0
     }
@@ -1060,7 +1054,7 @@ impl ExecutableOperation for LSR {
 
 pub struct NOP;
 impl ExecutableOperation for NOP {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         // Not all nops are equal
         // TODO: Implement illegal opcodes
 
@@ -1212,7 +1206,7 @@ impl ExecutableOperation for RTS {
 
 pub struct SEC;
 impl ExecutableOperation for SEC {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.set_flag(Flags6502::C, true);
         0
     }
@@ -1220,7 +1214,7 @@ impl ExecutableOperation for SEC {
 
 pub struct SED;
 impl ExecutableOperation for SED {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.set_flag(Flags6502::D, true);
         0
     }
@@ -1228,7 +1222,7 @@ impl ExecutableOperation for SED {
 
 pub struct SEI;
 impl ExecutableOperation for SEI {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.set_flag(Flags6502::I, true);
         0
     }
@@ -1260,7 +1254,7 @@ impl ExecutableOperation for STY {
 
 pub struct TAX;
 impl ExecutableOperation for TAX {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.x = cpu.a;
         cpu.set_flag(Flags6502::Z, cpu.x == 0x00);
         cpu.set_flag(Flags6502::N, (cpu.x & 0x80) != 0);
@@ -1270,7 +1264,7 @@ impl ExecutableOperation for TAX {
 
 pub struct TAY;
 impl ExecutableOperation for TAY {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.y = cpu.a;
         cpu.set_flag(Flags6502::Z, cpu.y == 0x00);
         cpu.set_flag(Flags6502::N, (cpu.y & 0x80) != 0);
@@ -1280,7 +1274,7 @@ impl ExecutableOperation for TAY {
 
 pub struct TSX;
 impl ExecutableOperation for TSX {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.x = cpu.stkp;
         cpu.set_flag(Flags6502::Z, cpu.x == 0x00);
         cpu.set_flag(Flags6502::N, (cpu.x & 0x80) != 0);
@@ -1290,7 +1284,7 @@ impl ExecutableOperation for TSX {
 
 pub struct TXA;
 impl ExecutableOperation for TXA {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.a = cpu.x;
         cpu.set_flag(Flags6502::Z, cpu.a == 0x00);
         cpu.set_flag(Flags6502::N, (cpu.a & 0x80) != 0);
@@ -1300,7 +1294,7 @@ impl ExecutableOperation for TXA {
 
 pub struct TXS;
 impl ExecutableOperation for TXS {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.stkp = cpu.x;
         0
     }
@@ -1308,7 +1302,7 @@ impl ExecutableOperation for TXS {
 
 pub struct TYA;
 impl ExecutableOperation for TYA {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         cpu.a = cpu.y;
         cpu.set_flag(Flags6502::Z, cpu.a == 0x00);
         cpu.set_flag(Flags6502::N, (cpu.a & 0x80) != 0);
@@ -1318,7 +1312,7 @@ impl ExecutableOperation for TYA {
 
 pub struct XXX;
 impl ExecutableOperation for XXX {
-    fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
+    fn execute(&self, _cpu: &mut Cpu6502, _io: &mut IODevice) -> u8 {
         0
     }
 }

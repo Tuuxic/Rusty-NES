@@ -3,7 +3,7 @@ const RAM_ADDR_MAX: u16 = 0xFFFF;
 const RAM_ADDR_MIN: u16 = 0x0000;
 
 pub struct CpuRAM {
-    ram: [u8; RAM_SIZE as usize],
+    pub ram: [u8; RAM_SIZE as usize],
     // read_func: fn(u16) -> u8,
     // write_func: fn(u16, u8)
 }
