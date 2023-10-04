@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{time::Duration, collections::HashMap};
 
 use crate::{
     bus_mod::bus::CpuRAM,
@@ -13,21 +13,24 @@ pub struct Nes {
     cpu: Cpu6502,
     //clock: &Clock
     frame_delta_time: f64,
+    debug_dissassembly: (HashMap<u16, u16>, Vec<String>)
 }
 
 impl Nes {
     pub fn new() -> Nes {
         let ram: CpuRAM = CpuRAM::new();
         let cpu: Cpu6502 = Cpu6502::new();
+        let debug_dissassembly = (HashMap::new(), vec![]);
         Nes {
             ram,
             cpu,
             frame_delta_time: 0.0,
+            debug_dissassembly
         }
     }
 
     pub fn init(&mut self) {
-        let program: Vec<u8> = vec![0xA2, 0x0A, 0x8E, 0x00, 0x00, 0xA2, 0x03, 0x8E, 0x01, 0x00, 0xAC, 0x00, 0x00, 0xA9, 0x00, 0x18, 0x6D, 0x01, 0x00, 0x88, 0xD0, 0xFA, 0x8D, 0x02, 0x00, 0xEA, 0xEA, 0xEA];
+        let program: Vec<u8> = vec![0xA2, 0x0A, 0x8E, 0x00, 0x00, 0xA2, 0x03, 0x8E, 0x01, 0x00, 0xAC, 0x00, 0x00, 0xA9, 0x00, 0x18, 0x6D, 0x01, 0x00, 0x88, 0xD0, 0xFA, 0x8D, 0x02, 0x00, 0xEA, 0xEA, 0xEA, 0x4c, 0x00, 0x80];
         let offset: u16 = 0x8000;
 
         for (i, num) in program.into_iter().enumerate() {
@@ -36,6 +39,9 @@ impl Nes {
 
         self.ram.ram[0xFFFC] = 0x00;
         self.ram.ram[0xFFFD] = 0x80;
+
+        let mut io = IODevice::new(&mut self.ram);
+        self.debug_dissassembly = Disassembler::dissassemble(0x0000, 0xFFFF, &mut io);
         self.reset();
 
     }
@@ -53,35 +59,64 @@ impl Nes {
         self.cpu.reset(&mut io)
     }
 
-    pub fn get_debug(&mut self) -> String {
-        let mut io = IODevice::new(&mut self.ram);
-        let (dissasemler, instructions) = Disassembler::dissassemble(0x0000, 0xFFFF, &mut io);
-        let range: u16 = 12;
-        let mut str: String = String::from(""); 
+    pub fn step(&mut self) {
+        self.clock();
+        while self.cpu.cycles != 0 {
+            self.clock();
+        }
+    }
 
-        let pc_index = dissasemler[&(self.cpu.pc)];
+    pub fn get_debug_code(&mut self) -> String {
+        let range: usize = 12;
+        let mut str: String = String::from(""); 
+        let (disassembler, _) = &self.debug_dissassembly;
+        if !disassembler.contains_key(&self.cpu.pc) {
+            self.redissassamble();    
+        } 
+        let (disassembler, instructions) = &self.debug_dissassembly;
+
+        if !disassembler.contains_key(&self.cpu.pc) {
+            return "--- Dissassembly Error ---".to_string();
+        }
+        let pc_index: usize = disassembler[&(self.cpu.pc)] as usize;
+
+
+        let pre_buffer = { match pc_index < range {
+            true => range - pc_index,
+            false => 0,
+        } };
+        for _ in 0..(pre_buffer) {
+            str.push_str("-----------------------\n");
+        }
 
         for i in 1..(range + 1) {
-            
-            let instr = {
-                if pc_index < (range + 1 - i) {
-                    (instructions.len() - 1) - (((range + 1 - i) - pc_index) as usize)
-                } else {
-                    (pc_index - (range + 1 - i)) as usize
-                }
-            };
+            if pc_index < (range + 1 - i) {
+                continue;
+            }
+            let instr = pc_index - (range + 1 - i);
             str.push_str(&instructions[instr]);
             str.push_str("\n");
         }
 
         str.push_str("> ");
-        str.push_str(&instructions[pc_index as usize]);
+        str.push_str(&instructions[pc_index]);
         str.push_str("\n");
 
         for i in 1..(range + 1) {
-            let instr = (pc_index + i) as usize % instructions.len();
+            if (pc_index + i) >= instructions.len() {
+                continue;
+            }
+            let instr = (pc_index + i) as usize;
             str.push_str(&instructions[instr]);
             str.push_str("\n");
+        }
+
+        let post_buffer = { match instructions.len() <= (pc_index + range) {
+            true => (pc_index + range) -  instructions.len() + 1,
+            false => 0,
+        } };
+        for _ in 0..(post_buffer) {
+            str.push_str("-----------------------\n");
         }
 
         str
@@ -122,4 +157,10 @@ impl Nes {
         // self.cpu.clock(&mut self.ram);
         self.cpu.clock(&mut io);
     }
+
+    fn redissassamble(&mut self) {
+        let mut io = IODevice::new(&mut self.ram);
+        self.debug_dissassembly = Disassembler::dissassemble(0x0000, 0xFFFF, &mut io);
+    }
+
 }

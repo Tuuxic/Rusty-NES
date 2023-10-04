@@ -23,11 +23,11 @@ impl Disassembler {
             let mut instruction_str = ["0x", &Disassembler::hex(addr, 4), ": "].join("");
             let opcode: u8 = io.read(addr as u16);
             addr += 1;
-
-            instruction_str.push_str(&Instruction::from_opcode(opcode).get_name());
+            let instr = Instruction::from_opcode(opcode);
+            instruction_str.push_str(&instr.get_name());
             instruction_str.push_str(" ");
 
-            match Instruction::opcode_to_addrmode(opcode) {
+            match instr.get_addrmode() {
                 AddrMode::IMP => { instruction_str.push_str(" {IMP}"); },
                 AddrMode::IMM => { 
                     value = io.read(addr as u16);
@@ -58,7 +58,8 @@ impl Disassembler {
                 AddrMode::REL => { 
                     value = io.read(addr as u16);
                     addr += 1;
-                    instruction_str.push_str(&["0x", &Disassembler::hex(value as u32, 2), " [0x", &Disassembler::hex(addr + (value as u32), 4) , "] {REL}"].join(""));
+                    let dest = { if (value & 0x80) > 0 {addr - ((!value + 1) as u32)} else {addr + (value as u32)}};
+                    instruction_str.push_str(&["0x", &Disassembler::hex(value as u32, 2), " [0x", &Disassembler::hex(dest, 4) , "] {REL}"].join(""));
                 },
                 AddrMode::ABS => { 
                     lo = io.read(addr as u16);
