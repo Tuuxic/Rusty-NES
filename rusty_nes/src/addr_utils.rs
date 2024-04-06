@@ -1,5 +1,6 @@
 pub struct AddrUtils;
 impl AddrUtils {
+    pub const RAM_SIZE: u32 = 2048;
     pub const CPU_RAM_ADDR_MAX: u16 = 0x1FFF;
     pub const CPU_RAM_ADDR_MIN: u16 = 0x0000;
 
