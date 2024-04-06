@@ -2,7 +2,6 @@ mod addr_utils;
 mod bus_mod;
 mod cartridge_mod;
 mod cpu_mod;
-mod iodevice;
 mod nes;
 mod ppu_mod;
 

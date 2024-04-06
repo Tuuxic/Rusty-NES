@@ -1,4 +1,4 @@
-use crate::iodevice::IODevice;
+use crate::bus_mod::iodevice::IODevice;
 
 use super::flags6502::Flags6502;
 

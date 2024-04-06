@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::iodevice::IODevice;
+use crate::bus_mod::iodevice::IODevice;
 
 use super::instruction::{AddrMode, Instruction};
 

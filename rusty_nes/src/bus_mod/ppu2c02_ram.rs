@@ -1,4 +1,4 @@
-use super::ppu::{PpuAddr, PpuRAM};
+use super::ppu_ram::{PpuAddr, PpuRAM};
 
 pub struct Ppu2c02RAM {
     name_table: [[u8; 1024]; 2],

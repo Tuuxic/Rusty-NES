@@ -1,4 +1,4 @@
-use crate::iodevice::IODevice;
+use crate::bus_mod::iodevice::IODevice;
 
 use super::{cpu::Cpu, cpu6502::Cpu6502, flags6502::Flags6502, instr_mapping::InstructionMapping};
 

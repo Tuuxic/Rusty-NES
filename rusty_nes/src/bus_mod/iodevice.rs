@@ -1,7 +1,6 @@
-use crate::{
-    addr_utils::AddrUtils, bus_mod::bus::CpuRAM, cartridge_mod::cartridge::Cartridge,
-    ppu_mod::ppu::PpuRAM,
-};
+use crate::{addr_utils::AddrUtils, bus_mod::cpu_ram::CpuRAM, cartridge_mod::cartridge::Cartridge};
+
+use super::ppu_ram::PpuRAM;
 
 pub struct IODevice<'a> {
     ram: &'a mut CpuRAM,

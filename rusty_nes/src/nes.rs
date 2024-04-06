@@ -1,11 +1,10 @@
 use std::{collections::HashMap, time::Duration};
 
 use crate::{
-    bus_mod::bus::CpuRAM,
+    bus_mod::{cpu_ram::CpuRAM, iodevice::IODevice, ppu2c02_ram::Ppu2c02RAM, ppu_ram::PpuRAM},
     cartridge_mod::cartridge::Cartridge,
     cpu_mod::{cpu::Cpu, cpu6502::Cpu6502, disassembler::Disassembler},
-    iodevice::IODevice,
-    ppu_mod::{ppu::PpuRAM, ppu2c02::Ppu2c02RAM, ppu_processor::Ppu},
+    ppu_mod::ppu_processor::Ppu,
 };
 
 pub const FRAME_LENGTH: Duration = Duration::from_millis(1); // Duration::new(0, 16_666_666);
