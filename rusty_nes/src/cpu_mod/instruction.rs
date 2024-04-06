@@ -55,7 +55,7 @@ impl Instruction {
     pub fn get_addrmode(&self) -> AddrMode {
         self.addrtype
     }
-    /* 
+    /*
     pub fn opcode_to_addrmode(opcode: u8) -> AddrMode {
         return Instruction::from_opcode(opcode).get_addrmode();
     }

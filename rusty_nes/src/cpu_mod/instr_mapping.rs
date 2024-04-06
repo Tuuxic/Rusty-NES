@@ -1,8 +1,7 @@
 use super::instruction::*;
 
-
 pub struct InstructionMapping;
- impl InstructionMapping {
+impl InstructionMapping {
     pub fn opcode_to_instruction(opcode: u8) -> Instruction {
         match opcode {
             0 => Instruction::new("BRK", Box::new(BRK), Box::new(IMM), AddrMode::IMM, 7),
