@@ -5,7 +5,7 @@ use crate::{
     cartridge_mod::cartridge::Cartridge,
     cpu_mod::{cpu::Cpu, cpu6502::Cpu6502, disassembler::Disassembler},
     iodevice::IODevice,
-    ppu_mod::{ppu::Ppu, ppu2c02::Ppu2C02},
+    ppu_mod::{ppu::PpuRAM, ppu2c02::Ppu2C02},
 };
 
 pub const FRAME_LENGTH: Duration = Duration::from_millis(1); // Duration::new(0, 16_666_666);
@@ -14,7 +14,7 @@ pub struct Nes {
     ram: CpuRAM,
     // TODO: Refactor Cpu6502 to Cpu
     cpu: Cpu6502,
-    ppu: Box<dyn Ppu>,
+    ppu: Box<dyn PpuRAM>,
     cartridge: Cartridge,
     //clock: &Clock
     frame_delta_time: f64,
@@ -66,7 +66,7 @@ impl Nes {
     }
 
     pub fn reset(&mut self) {
-        let mut io = IODevice::new(&mut self.ram, &mut self.ppu);
+        let mut io = IODevice::new(&mut self.ram, &mut self.ppu, &mut self.cartridge);
         self.cpu.reset(&mut io)
     }
 
@@ -180,7 +180,7 @@ impl Nes {
     }
 
     pub fn get_debug_ram(&mut self, start: u16, rows: u32, cols: u32) -> String {
-        let io = IODevice::new(&mut self.ram, &mut self.ppu);
+        let io = IODevice::new(&mut self.ram, &mut self.ppu, &mut self.cartridge);
         let mut str = String::from("");
         let mut offset = 0;
         for _ in 0..rows {
@@ -202,7 +202,7 @@ impl Nes {
     }
 
     fn clock(&mut self) {
-        let mut io = IODevice::new(&mut self.ram, &mut self.ppu);
+        let mut io = IODevice::new(&mut self.ram, &mut self.ppu, &mut self.cartridge);
         // self.cpu.clock(&mut self.ram);
         self.cpu.clock(&mut io);
     }
@@ -212,7 +212,7 @@ impl Nes {
     }
 
     fn redissassamble(&mut self) {
-        let mut io = IODevice::new(&mut self.ram, &mut self.ppu);
+        let mut io = IODevice::new(&mut self.ram, &mut self.ppu, &mut self.cartridge);
         self.debug_dissassembly = Disassembler::dissassemble(0x0000, 0xFFFF, &mut io);
     }
 }

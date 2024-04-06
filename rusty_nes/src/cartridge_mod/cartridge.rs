@@ -1,5 +1,7 @@
 use std::fs;
 
+use super::mapper::{Mapper, MapperUtils};
+
 pub struct Cartridge {
     vprg_memory: Vec<u8>,
     vchr_memory: Vec<u8>,
@@ -7,16 +9,18 @@ pub struct Cartridge {
     mapper_id: u8,
     prg_banks: u8,
     chr_banks: u8,
+    mapper: Box<dyn Mapper>,
 }
 
 impl Cartridge {
     pub fn new() -> Cartridge {
         Cartridge {
-            vprg_memory: vec![],
-            vchr_memory: vec![],
+            vprg_memory: vec![0; 16384],
+            vchr_memory: vec![0; 8192],
             mapper_id: 0,
-            prg_banks: 0,
-            chr_banks: 0,
+            prg_banks: 1,
+            chr_banks: 1,
+            mapper: MapperUtils::from_id(0),
         }
     }
     pub fn from_file(filename: &str) -> Cartridge {
@@ -52,7 +56,41 @@ impl Cartridge {
             mapper_id,
             prg_banks,
             chr_banks,
+            mapper: MapperUtils::from_id(mapper_id),
         }
+    }
+
+    pub fn cpu_read(&self, addr: u16, data: &mut u8) -> bool {
+        let mut mapped_addr: u32 = 0;
+        if self.mapper.cpu_map_read(addr, &mut mapped_addr) {
+            *data = self.vprg_memory[mapped_addr as usize];
+            return true;
+        }
+        false
+    }
+    pub fn cpu_write(&mut self, addr: u16, data: u8) -> bool {
+        let mut mapped_addr: u32 = 0;
+        if self.mapper.cpu_map_read(addr, &mut mapped_addr) {
+            self.vprg_memory[mapped_addr as usize] = data;
+            return true;
+        }
+        false
+    }
+    pub fn ppu_read(&self, addr: u16, data: &mut u8) -> bool {
+        let mut mapped_addr: u32 = 0;
+        if self.mapper.cpu_map_read(addr, &mut mapped_addr) {
+            *data = self.vchr_memory[mapped_addr as usize];
+            return true;
+        }
+        false
+    }
+    pub fn ppu_write(&mut self, addr: u16, data: u8) -> bool {
+        let mut mapped_addr: u32 = 0;
+        if self.mapper.cpu_map_read(addr, &mut mapped_addr) {
+            self.vchr_memory[mapped_addr as usize] = data;
+            return true;
+        }
+        false
     }
 }
 

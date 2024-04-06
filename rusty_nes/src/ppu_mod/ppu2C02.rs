@@ -1,4 +1,4 @@
-use super::ppu::{Ppu, PpuAddr};
+use super::ppu::{PpuAddr, PpuRAM};
 
 pub struct Ppu2C02 {
     name_table: [[u8; 1024]; 2],
@@ -15,7 +15,7 @@ impl Ppu2C02 {
     }
 }
 
-impl Ppu for Ppu2C02 {
+impl PpuRAM for Ppu2C02 {
     fn cpu_read(&self, addr: u16, _readonly: bool) -> u8 {
         let mem_region = PpuAddr::to_ppuaddr(addr);
         match mem_region {

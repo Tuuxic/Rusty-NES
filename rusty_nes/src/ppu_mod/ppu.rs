@@ -1,6 +1,6 @@
 use crate::addr_utils::AddrUtils;
 
-pub trait Ppu {
+pub trait PpuRAM {
     fn cpu_read(&self, addr: u16, readonly: bool) -> u8;
     fn cpu_write(&mut self, addr: u16, data: u8);
 
