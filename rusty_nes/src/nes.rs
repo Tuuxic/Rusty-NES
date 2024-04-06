@@ -2,8 +2,10 @@ use std::{collections::HashMap, time::Duration};
 
 use crate::{
     bus_mod::bus::CpuRAM,
+    cartridge_mod::cartridge::Cartridge,
     cpu_mod::{cpu::Cpu, cpu6502::Cpu6502, disassembler::Disassembler},
     iodevice::IODevice,
+    ppu_mod::{ppu::Ppu, ppu2c02::Ppu2C02},
 };
 
 pub const FRAME_LENGTH: Duration = Duration::from_millis(1); // Duration::new(0, 16_666_666);
@@ -12,6 +14,8 @@ pub struct Nes {
     ram: CpuRAM,
     // TODO: Refactor Cpu6502 to Cpu
     cpu: Cpu6502,
+    ppu: Box<dyn Ppu>,
+    cartridge: Cartridge,
     //clock: &Clock
     frame_delta_time: f64,
     debug_dissassembly: (HashMap<u16, u16>, Vec<String>),
@@ -22,11 +26,14 @@ impl Nes {
         let ram: CpuRAM = CpuRAM::new();
         let cpu: Cpu6502 = Cpu6502::new();
         let debug_dissassembly = (HashMap::new(), vec![]);
+        let ppu = Box::new(Ppu2C02::new());
         Nes {
             ram,
             cpu,
+            ppu,
             frame_delta_time: 0.0,
             debug_dissassembly,
+            cartridge: Cartridge,
         }
     }
 
@@ -59,7 +66,7 @@ impl Nes {
     }
 
     pub fn reset(&mut self) {
-        let mut io = IODevice::new(&mut self.ram);
+        let mut io = IODevice::new(&mut self.ram, &mut self.ppu);
         self.cpu.reset(&mut io)
     }
 
@@ -173,7 +180,7 @@ impl Nes {
     }
 
     pub fn get_debug_ram(&mut self, start: u16, rows: u32, cols: u32) -> String {
-        let mut io = IODevice::new(&mut self.ram);
+        let io = IODevice::new(&mut self.ram, &mut self.ppu);
         let mut str = String::from("");
         let mut offset = 0;
         for _ in 0..rows {
@@ -195,13 +202,17 @@ impl Nes {
     }
 
     fn clock(&mut self) {
-        let mut io = IODevice::new(&mut self.ram);
+        let mut io = IODevice::new(&mut self.ram, &mut self.ppu);
         // self.cpu.clock(&mut self.ram);
         self.cpu.clock(&mut io);
     }
 
+    fn insert_cartridge(&mut self, cartridge: Cartridge) {
+        self.cartridge = cartridge;
+    }
+
     fn redissassamble(&mut self) {
-        let mut io = IODevice::new(&mut self.ram);
+        let mut io = IODevice::new(&mut self.ram, &mut self.ppu);
         self.debug_dissassembly = Disassembler::dissassemble(0x0000, 0xFFFF, &mut io);
     }
 }

@@ -1,1 +1,1 @@
-struct Cartridge;
+pub struct Cartridge;

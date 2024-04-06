@@ -1,13 +1,26 @@
 use super::ppu::{Ppu, PpuAddr};
 
-pub struct Ppu2C02 {}
+pub struct Ppu2C02 {
+    name_table: [[u8; 1024]; 2],
+    palette_table: [u8; 32],
+}
+
+impl Ppu2C02 {
+    pub fn new() -> Ppu2C02 {
+        let ppu: Ppu2C02 = Ppu2C02 {
+            name_table: [[0; 1024]; 2],
+            palette_table: [0; 32],
+        };
+        ppu
+    }
+}
 
 impl Ppu for Ppu2C02 {
     fn cpu_read(&self, addr: u16, _readonly: bool) -> u8 {
         let mem_region = PpuAddr::to_ppuaddr(addr);
         match mem_region {
-            PpuAddr::Control => return 0,
-            PpuAddr::Mask => return 0,
+            PpuAddr::Control => return self.name_table[0][0], // Placeholder to avoid warning; Delete later
+            PpuAddr::Mask => return self.palette_table[0], // Placeholder to avoid warning; Delete later
             PpuAddr::Status => return 0,
             PpuAddr::OAMAddr => return 0,
             PpuAddr::OAMData => return 0,
@@ -18,7 +31,7 @@ impl Ppu for Ppu2C02 {
         }
     }
 
-    fn cpu_write(&self, addr: u16, _data: u8) {
+    fn cpu_write(&mut self, addr: u16, _data: u8) {
         let mem_region = PpuAddr::to_ppuaddr(addr);
         match mem_region {
             PpuAddr::Control => return,
@@ -37,5 +50,5 @@ impl Ppu for Ppu2C02 {
         return 0;
     }
 
-    fn ppu_write(&self, _addr: u16, _data: u8) {}
+    fn ppu_write(&mut self, _addr: u16, _data: u8) {}
 }
