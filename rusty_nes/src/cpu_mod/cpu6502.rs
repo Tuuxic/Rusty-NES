@@ -71,9 +71,9 @@ impl Cpu for Cpu6502 {
     fn reset(&mut self, io: &mut IODevice) {
         self.addr_abs = 0xFFFC;
 
-        let lo: u16 = io.read(self.addr_abs + 0) as u16;
+        let lo: u16 = io.cpu_read(self.addr_abs + 0) as u16;
 
-        let hi: u16 = io.read(self.addr_abs + 1) as u16;
+        let hi: u16 = io.cpu_read(self.addr_abs + 1) as u16;
 
         self.pc = (hi << 8) | lo;
 
@@ -103,11 +103,11 @@ impl Cpu for Cpu6502 {
 
         // Save PC on stack
 
-        io.write(0x0100 + (self.stkp as u16), ((self.pc >> 8) & 0x00FF) as u8);
+        io.cpu_write(0x0100 + (self.stkp as u16), ((self.pc >> 8) & 0x00FF) as u8);
 
         self.stkp -= 1;
 
-        io.write(0x0100 + (self.stkp as u16), (self.pc & 0x00FF) as u8);
+        io.cpu_write(0x0100 + (self.stkp as u16), (self.pc & 0x00FF) as u8);
 
         self.stkp -= 1;
 
@@ -117,15 +117,15 @@ impl Cpu for Cpu6502 {
 
         self.set_flag(Flags6502::I, true);
 
-        io.write(0x0100 + (self.stkp as u16), self.status);
+        io.cpu_write(0x0100 + (self.stkp as u16), self.status);
 
         self.stkp -= 1;
 
         self.addr_abs = 0xFFFE;
 
-        let lo: u16 = io.read(self.addr_abs) as u16;
+        let lo: u16 = io.cpu_read(self.addr_abs) as u16;
 
-        let hi: u16 = io.read(self.addr_abs + 1) as u16;
+        let hi: u16 = io.cpu_read(self.addr_abs + 1) as u16;
 
         self.pc = (hi << 8) | lo;
 
@@ -133,11 +133,11 @@ impl Cpu for Cpu6502 {
     }
 
     fn nmi(&mut self, io: &mut IODevice) {
-        io.write(0x0100 + (self.stkp as u16), ((self.pc >> 8) & 0x00FF) as u8);
+        io.cpu_write(0x0100 + (self.stkp as u16), ((self.pc >> 8) & 0x00FF) as u8);
 
         self.stkp -= 1;
 
-        io.write(0x0100 + (self.stkp as u16), (self.pc & 0x00FF) as u8);
+        io.cpu_write(0x0100 + (self.stkp as u16), (self.pc & 0x00FF) as u8);
 
         self.stkp -= 1;
 
@@ -147,15 +147,15 @@ impl Cpu for Cpu6502 {
 
         self.set_flag(Flags6502::I, true);
 
-        io.write(0x0100 + (self.stkp as u16), self.status);
+        io.cpu_write(0x0100 + (self.stkp as u16), self.status);
 
         self.stkp -= 1;
 
         self.addr_abs = 0xFFFA;
 
-        let lo: u16 = io.read(self.addr_abs) as u16;
+        let lo: u16 = io.cpu_read(self.addr_abs) as u16;
 
-        let hi: u16 = io.read(self.addr_abs + 1) as u16;
+        let hi: u16 = io.cpu_read(self.addr_abs + 1) as u16;
 
         self.pc = (hi << 8) | lo;
 
@@ -187,14 +187,14 @@ impl Cpu for Cpu6502 {
             Instruction::from_opcode(self.opcode).get_addrmode(),
             AddrMode::IMP
         ) {
-            self.fetched = io.read(self.addr_abs);
+            self.fetched = io.cpu_read(self.addr_abs);
         }
         self.fetched
     }
 
     fn clock(&mut self, io: &mut IODevice) {
         if self.cycles <= 0 {
-            self.opcode = io.read(self.pc);
+            self.opcode = io.cpu_read(self.pc);
 
             self.set_flag(Flags6502::U, true);
 

@@ -1,4 +1,4 @@
-const RAM_SIZE: u32 = 64 * 1024;
+const RAM_SIZE: u32 = 2048; // 64 * 1024;
 const RAM_ADDR_MAX: u16 = 0xFFFF;
 const RAM_ADDR_MIN: u16 = 0x0000;
 

@@ -142,7 +142,7 @@ impl Nes {
         for _ in 0..rows {
             str.push_str(&["0x", &Disassembler::hex((start + offset) as u32, 4), ":"].join(""));
             for _ in 0..cols {
-                str.push_str(&[" ", &Disassembler::hex(io.read(start + offset) as u32, 2)].join(""));
+                str.push_str(&[" ", &Disassembler::hex(io.cpu_read(start + offset) as u32, 2)].join(""));
                 offset += 1;
             }
             str.push_str("\n");

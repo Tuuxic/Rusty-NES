@@ -104,7 +104,7 @@ impl ExecutableOperation for IMM {
 pub struct ZP0;
 impl ExecutableOperation for ZP0 {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
-        cpu.addr_abs = io.read(cpu.pc) as u16;
+        cpu.addr_abs = io.cpu_read(cpu.pc) as u16;
 
         cpu.pc += 1;
 
@@ -117,7 +117,7 @@ impl ExecutableOperation for ZP0 {
 pub struct ZPX;
 impl ExecutableOperation for ZPX {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
-        cpu.addr_abs = (io.read(cpu.pc) + cpu.x) as u16;
+        cpu.addr_abs = (io.cpu_read(cpu.pc) + cpu.x) as u16;
 
         cpu.pc += 1;
 
@@ -129,7 +129,7 @@ impl ExecutableOperation for ZPX {
 pub struct ZPY;
 impl ExecutableOperation for ZPY {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
-        cpu.addr_abs = (io.read(cpu.pc) + cpu.y) as u16;
+        cpu.addr_abs = (io.cpu_read(cpu.pc) + cpu.y) as u16;
 
         cpu.pc += 1;
 
@@ -141,7 +141,7 @@ impl ExecutableOperation for ZPY {
 pub struct REL;
 impl ExecutableOperation for REL {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
-        cpu.addr_rel = io.read(cpu.pc) as u16;
+        cpu.addr_rel = io.cpu_read(cpu.pc) as u16;
 
         cpu.pc += 1;
 
@@ -155,11 +155,11 @@ impl ExecutableOperation for REL {
 pub struct ABS;
 impl ExecutableOperation for ABS {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
-        let lo: u16 = io.read(cpu.pc) as u16;
+        let lo: u16 = io.cpu_read(cpu.pc) as u16;
 
         cpu.pc += 1;
 
-        let hi: u16 = io.read(cpu.pc) as u16;
+        let hi: u16 = io.cpu_read(cpu.pc) as u16;
 
         cpu.pc += 1;
 
@@ -171,11 +171,11 @@ impl ExecutableOperation for ABS {
 pub struct ABX;
 impl ExecutableOperation for ABX {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
-        let lo: u16 = io.read(cpu.pc) as u16;
+        let lo: u16 = io.cpu_read(cpu.pc) as u16;
 
         cpu.pc += 1;
 
-        let hi: u16 = io.read(cpu.pc) as u16;
+        let hi: u16 = io.cpu_read(cpu.pc) as u16;
 
         cpu.pc += 1;
 
@@ -193,11 +193,11 @@ impl ExecutableOperation for ABX {
 pub struct ABY;
 impl ExecutableOperation for ABY {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
-        let lo: u16 = io.read(cpu.pc) as u16;
+        let lo: u16 = io.cpu_read(cpu.pc) as u16;
 
         cpu.pc += 1;
 
-        let hi: u16 = io.read(cpu.pc) as u16;
+        let hi: u16 = io.cpu_read(cpu.pc) as u16;
 
         cpu.pc += 1;
 
@@ -215,26 +215,26 @@ impl ExecutableOperation for ABY {
 pub struct IND;
 impl ExecutableOperation for IND {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
-        let ptr_lo: u16 = io.read(cpu.pc) as u16;
+        let ptr_lo: u16 = io.cpu_read(cpu.pc) as u16;
 
         cpu.pc += 1;
 
-        let ptr_hi: u16 = io.read(cpu.pc) as u16;
+        let ptr_hi: u16 = io.cpu_read(cpu.pc) as u16;
 
         cpu.pc += 1;
 
         let ptr: u16 = (ptr_hi << 8) | ptr_lo;
 
         if ptr_lo == 0x00FF {
-            let hi: u16 = io.read(ptr & 0xFF00) as u16;
+            let hi: u16 = io.cpu_read(ptr & 0xFF00) as u16;
 
-            let lo: u16 = io.read(ptr) as u16;
+            let lo: u16 = io.cpu_read(ptr) as u16;
 
             cpu.addr_abs = (hi << 8) | lo;
         } else {
-            let hi: u16 = io.read(ptr + 1) as u16;
+            let hi: u16 = io.cpu_read(ptr + 1) as u16;
 
-            let lo: u16 = io.read(ptr) as u16;
+            let lo: u16 = io.cpu_read(ptr) as u16;
 
             cpu.addr_abs = (hi << 8) | lo;
         }
@@ -245,13 +245,13 @@ impl ExecutableOperation for IND {
 pub struct IZX;
 impl ExecutableOperation for IZX {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
-        let t: u16 = io.read(cpu.pc) as u16;
+        let t: u16 = io.cpu_read(cpu.pc) as u16;
 
         cpu.pc += 1;
 
-        let lo: u16 = io.read(((t + (cpu.x as u16)) as u16) & 0x00FF) as u16;
+        let lo: u16 = io.cpu_read(((t + (cpu.x as u16)) as u16) & 0x00FF) as u16;
 
-        let hi: u16 = io.read(((t + (cpu.x as u16) + 1) as u16) & 0x00FF) as u16;
+        let hi: u16 = io.cpu_read(((t + (cpu.x as u16) + 1) as u16) & 0x00FF) as u16;
 
         cpu.addr_abs = (hi << 8) | lo;
 
@@ -262,13 +262,13 @@ impl ExecutableOperation for IZX {
 pub struct IZY;
 impl ExecutableOperation for IZY {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
-        let t: u16 = io.read(cpu.pc) as u16;
+        let t: u16 = io.cpu_read(cpu.pc) as u16;
 
         cpu.pc += 1;
 
-        let lo: u16 = io.read(t & 0x00FF) as u16;
+        let lo: u16 = io.cpu_read(t & 0x00FF) as u16;
 
-        let hi: u16 = io.read((t + 1) & 0x00FF) as u16;
+        let hi: u16 = io.cpu_read((t + 1) & 0x00FF) as u16;
 
         cpu.addr_abs = (hi << 8) | lo;
 
@@ -359,7 +359,7 @@ impl ExecutableOperation for ASL {
         ) {
             cpu.a = (cpu.temp & 0x00FF) as u8;
         } else {
-            io.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8);
+            io.cpu_write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8);
         }
         0
     }
@@ -500,17 +500,17 @@ impl ExecutableOperation for BRK {
         cpu.pc += 1;
 
         cpu.set_flag(Flags6502::I, true);
-        io.write(0x0100 + (cpu.stkp as u16), ((cpu.pc >> 8) & 0x00FF) as u8);
+        io.cpu_write(0x0100 + (cpu.stkp as u16), ((cpu.pc >> 8) & 0x00FF) as u8);
         cpu.stkp -= 1;
-        io.write(0x0100 + (cpu.stkp as u16), (cpu.pc & 0x00FF) as u8);
+        io.cpu_write(0x0100 + (cpu.stkp as u16), (cpu.pc & 0x00FF) as u8);
         cpu.stkp -= 1;
 
         cpu.set_flag(Flags6502::B, true);
-        io.write(0x0100 + (cpu.stkp as u16), cpu.status);
+        io.cpu_write(0x0100 + (cpu.stkp as u16), cpu.status);
         cpu.stkp -= 1;
         cpu.set_flag(Flags6502::B, false);
 
-        cpu.pc = io.read(0xFFFE) as u16 | ((io.read(0xFFFF) as u16) << 8);
+        cpu.pc = io.cpu_read(0xFFFE) as u16 | ((io.cpu_read(0xFFFF) as u16) << 8);
         0
     }
 }
@@ -629,7 +629,7 @@ impl ExecutableOperation for DEC {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
         cpu.fetch(io);
         cpu.temp = (cpu.fetched - 1) as u16;
-        io.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8);
+        io.cpu_write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8);
         cpu.set_flag(Flags6502::Z, (cpu.temp & 0x00FF) == 0x0000);
         cpu.set_flag(Flags6502::N, (cpu.temp & 0x0080) != 0);
         0
@@ -675,7 +675,7 @@ impl ExecutableOperation for INC {
         cpu.fetch(io);
 
         cpu.temp = (cpu.fetched as u16) + 1;
-        io.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8);
+        io.cpu_write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8);
         cpu.set_flag(Flags6502::Z, (cpu.temp & 0x00FF) == 0x0000);
         cpu.set_flag(Flags6502::N, (cpu.temp & 0x0080) != 0);
 
@@ -718,10 +718,10 @@ impl ExecutableOperation for JSR {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
         cpu.pc -= 1;
 
-        io.write(0x0100 + (cpu.stkp as u16), ((cpu.pc >> 8) & 0x00FF) as u8);
+        io.cpu_write(0x0100 + (cpu.stkp as u16), ((cpu.pc >> 8) & 0x00FF) as u8);
         cpu.stkp -= 1;
 
-        io.write(0x0100 + (cpu.stkp as u16), (cpu.pc & 0x00FF) as u8);
+        io.cpu_write(0x0100 + (cpu.stkp as u16), (cpu.pc & 0x00FF) as u8);
         cpu.stkp -= 1;
 
         cpu.pc = cpu.addr_abs;
@@ -781,7 +781,7 @@ impl ExecutableOperation for LSR {
         ) {
             cpu.a = (cpu.temp & 0x00FF) as u8;
         } else {
-            io.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8)
+            io.cpu_write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8)
         }
 
         0
@@ -819,7 +819,7 @@ impl ExecutableOperation for ORA {
 pub struct PHA;
 impl ExecutableOperation for PHA {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
-        io.write(0x0100 + (cpu.stkp as u16), cpu.a);
+        io.cpu_write(0x0100 + (cpu.stkp as u16), cpu.a);
         cpu.stkp -= 1;
         0
     }
@@ -828,7 +828,7 @@ impl ExecutableOperation for PHA {
 pub struct PHP;
 impl ExecutableOperation for PHP {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
-        io.write(
+        io.cpu_write(
             0x0100 + (cpu.stkp as u16),
             cpu.status | Flags6502::B.0 | Flags6502::U.0,
         );
@@ -844,7 +844,7 @@ pub struct PLA;
 impl ExecutableOperation for PLA {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
         cpu.stkp += 1;
-        cpu.a = io.read(0x0100 + (cpu.stkp as u16));
+        cpu.a = io.cpu_read(0x0100 + (cpu.stkp as u16));
 
         cpu.set_flag(Flags6502::Z, cpu.a == 0x00);
         cpu.set_flag(Flags6502::N, (cpu.a & 0x80) != 0);
@@ -857,7 +857,7 @@ pub struct PLP;
 impl ExecutableOperation for PLP {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
         cpu.stkp += 1;
-        cpu.status = io.read(0x0100 + (cpu.stkp as u16));
+        cpu.status = io.cpu_read(0x0100 + (cpu.stkp as u16));
 
         cpu.set_flag(Flags6502::U, true);
 
@@ -881,7 +881,7 @@ impl ExecutableOperation for ROL {
         ) {
             cpu.a = (cpu.temp & 0x00FF) as u8;
         } else {
-            io.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8)
+            io.cpu_write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8)
         }
 
         0
@@ -904,7 +904,7 @@ impl ExecutableOperation for ROR {
         ) {
             cpu.a = (cpu.temp & 0x00FF) as u8;
         } else {
-            io.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8)
+            io.cpu_write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8)
         }
 
         0
@@ -915,14 +915,14 @@ pub struct RTI;
 impl ExecutableOperation for RTI {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
         cpu.stkp += 1;
-        cpu.status = io.read(0x0100 + (cpu.stkp as u16));
+        cpu.status = io.cpu_read(0x0100 + (cpu.stkp as u16));
         cpu.status &= !Flags6502::B.0;
         cpu.status &= !Flags6502::U.0;
 
         cpu.stkp += 1;
-        cpu.pc = io.read(0x0100 + (cpu.stkp as u16)) as u16;
+        cpu.pc = io.cpu_read(0x0100 + (cpu.stkp as u16)) as u16;
         cpu.stkp += 1;
-        cpu.pc |= (io.read(0x0100 + (cpu.stkp as u16)) as u16) << 8;
+        cpu.pc |= (io.cpu_read(0x0100 + (cpu.stkp as u16)) as u16) << 8;
         0
     }
 }
@@ -931,9 +931,9 @@ pub struct RTS;
 impl ExecutableOperation for RTS {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
         cpu.stkp += 1;
-        cpu.pc = io.read(0x0100 + (cpu.stkp as u16)) as u16;
+        cpu.pc = io.cpu_read(0x0100 + (cpu.stkp as u16)) as u16;
         cpu.stkp += 1;
-        cpu.pc |= (io.read(0x0100 + (cpu.stkp as u16)) as u16) << 8;
+        cpu.pc |= (io.cpu_read(0x0100 + (cpu.stkp as u16)) as u16) << 8;
 
         cpu.pc += 1;
         0
@@ -967,7 +967,7 @@ impl ExecutableOperation for SEI {
 pub struct STA;
 impl ExecutableOperation for STA {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
-        io.write(cpu.addr_abs, cpu.a);
+        io.cpu_write(cpu.addr_abs, cpu.a);
         0
     }
 }
@@ -975,7 +975,7 @@ impl ExecutableOperation for STA {
 pub struct STX;
 impl ExecutableOperation for STX {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
-        io.write(cpu.addr_abs, cpu.x);
+        io.cpu_write(cpu.addr_abs, cpu.x);
         0
     }
 }
@@ -983,7 +983,7 @@ impl ExecutableOperation for STX {
 pub struct STY;
 impl ExecutableOperation for STY {
     fn execute(&self, cpu: &mut Cpu6502, io: &mut IODevice) -> u8 {
-        io.write(cpu.addr_abs, cpu.y);
+        io.cpu_write(cpu.addr_abs, cpu.y);
         0
     }
 }

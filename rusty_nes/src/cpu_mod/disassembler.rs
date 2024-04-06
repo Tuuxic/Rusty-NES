@@ -21,7 +21,7 @@ impl Disassembler {
         while addr <= (end_addr as u32) {
             line_addr = addr as u16;
             let mut instruction_str = ["0x", &Disassembler::hex(addr, 4), ": "].join("");
-            let opcode: u8 = io.read(addr as u16);
+            let opcode: u8 = io.cpu_read(addr as u16);
             addr += 1;
             let instr = Instruction::from_opcode(opcode);
             instruction_str.push_str(&instr.get_name());
@@ -30,13 +30,13 @@ impl Disassembler {
             match instr.get_addrmode() {
                 AddrMode::IMP => { instruction_str.push_str(" {IMP}"); },
                 AddrMode::IMM => { 
-                    value = io.read(addr as u16);
+                    value = io.cpu_read(addr as u16);
                     addr += 1;
                     instruction_str.push_str(&["#0x", &Disassembler::hex(value as u32, 2), " {IMM}"].join(""));
 
                 },
                 AddrMode::ZP0 => { 
-                    lo = io.read(addr as u16);
+                    lo = io.cpu_read(addr as u16);
                     // hi = 0x00;
                     addr += 1;
                     instruction_str.push_str(&["0x", &Disassembler::hex(lo as u32, 2), " {ZP0}"].join(""));
@@ -44,60 +44,60 @@ impl Disassembler {
                 },
 
                 AddrMode::ZPX => { 
-                    lo = io.read(addr as u16);
+                    lo = io.cpu_read(addr as u16);
                     // hi = 0x00;
                     addr += 1;
                     instruction_str.push_str(&["0x", &Disassembler::hex(lo as u32, 2), ", X {ZPX}"].join(""));
                 },
                 AddrMode::ZPY => { 
-                    lo = io.read(addr as u16);
+                    lo = io.cpu_read(addr as u16);
                     // hi = 0x00;
                     addr += 1;
                     instruction_str.push_str(&["0x", &Disassembler::hex(lo as u32, 2), ", Y {ZPY}"].join(""));
                 },
                 AddrMode::REL => { 
-                    value = io.read(addr as u16);
+                    value = io.cpu_read(addr as u16);
                     addr += 1;
                     let dest = { if (value & 0x80) > 0 {addr - ((!value + 1) as u32)} else {addr + (value as u32)}};
                     instruction_str.push_str(&["0x", &Disassembler::hex(value as u32, 2), " [0x", &Disassembler::hex(dest, 4) , "] {REL}"].join(""));
                 },
                 AddrMode::ABS => { 
-                    lo = io.read(addr as u16);
+                    lo = io.cpu_read(addr as u16);
                     addr += 1;
-                    hi = io.read(addr as u16);
+                    hi = io.cpu_read(addr as u16);
                     addr += 1;
                     instruction_str.push_str(&["0x", &Disassembler::hex((((hi as u16) << 8) | lo as u16) as u32, 4), " {ABS}"].join(""));
                 },
                 AddrMode::ABX => { 
-                    lo = io.read(addr as u16);
+                    lo = io.cpu_read(addr as u16);
                     addr += 1;
-                    hi = io.read(addr as u16);
+                    hi = io.cpu_read(addr as u16);
                     addr += 1;
                     instruction_str.push_str(&["0x", &Disassembler::hex((((hi as u16) << 8) | lo as u16) as u32, 4), ", X {ABX}"].join(""));
                 },
                 AddrMode::ABY => { 
-                    lo = io.read(addr as u16);
+                    lo = io.cpu_read(addr as u16);
                     addr += 1;
-                    hi = io.read(addr as u16);
+                    hi = io.cpu_read(addr as u16);
                     addr += 1;
                     instruction_str.push_str(&["0x", &Disassembler::hex((((hi as u16) << 8) | lo as u16) as u32, 4), ", Y {ABY}"].join(""));
                 },
                 AddrMode::IND => { 
-                    lo = io.read(addr as u16);
+                    lo = io.cpu_read(addr as u16);
                     addr += 1;
-                    hi = io.read(addr as u16);
+                    hi = io.cpu_read(addr as u16);
                     addr += 1;
                     instruction_str.push_str(&["0x", &Disassembler::hex((((hi as u16) << 8) | lo as u16) as u32, 4), " {IND}"].join(""));
                 },
                 AddrMode::IZX => { 
-                    lo = io.read(addr as u16);
+                    lo = io.cpu_read(addr as u16);
                     // hi = 0x00;
                     addr += 1;
                     instruction_str.push_str(&["(0x", &Disassembler::hex(lo as u32, 2), ", X) {IZX}"].join(""));
 
                 },
                 AddrMode::IZY => { 
-                    lo = io.read(addr as u16);
+                    lo = io.cpu_read(addr as u16);
                     // hi = 0x00;
                     addr += 1;
                     instruction_str.push_str(&["(0x", &Disassembler::hex(lo as u32, 2), ", Y) {IZY}"].join(""));
