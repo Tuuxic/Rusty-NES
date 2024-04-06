@@ -1,8 +1,8 @@
 use palette::Srgb;
 
 pub struct Ppu {
-    colors: [Srgb<u8>; 0x40],
-    screen: [Srgb<u8>; 256 * 240],
+    colors: Vec<Srgb<u8>>,
+    screen: Vec<Srgb<u8>>,
 
     frame_complete: bool,
     scanline: i16,
@@ -12,8 +12,8 @@ pub struct Ppu {
 impl Ppu {
     pub fn new() -> Ppu {
         let ppu: Ppu = Ppu {
-            colors: [Srgb::<u8>::new(0, 0, 0); 0x40],
-            screen: [Srgb::<u8>::new(0, 0, 0); 256 * 240],
+            colors: vec![Srgb::<u8>::new(0, 0, 0); 0x40],
+            screen: vec![Srgb::<u8>::new(0, 0, 0); 256 * 240],
             frame_complete: false,
             scanline: 0,
             cycle: 0,
