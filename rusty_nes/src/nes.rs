@@ -5,7 +5,7 @@ use crate::{
     cartridge_mod::cartridge::Cartridge,
     cpu_mod::{cpu::Cpu, cpu6502::Cpu6502, disassembler::Disassembler},
     iodevice::IODevice,
-    ppu_mod::{ppu::PpuRAM, ppu2c02::Ppu2C02},
+    ppu_mod::{ppu::PpuRAM, ppu2c02::Ppu2c02RAM, ppu_processor::Ppu},
 };
 
 pub const FRAME_LENGTH: Duration = Duration::from_millis(1); // Duration::new(0, 16_666_666);
@@ -14,8 +14,10 @@ pub struct Nes {
     ram: CpuRAM,
     // TODO: Refactor Cpu6502 to Cpu
     cpu: Cpu6502,
-    ppu: Box<dyn PpuRAM>,
+    ppu_ram: Box<dyn PpuRAM>,
+    ppu: Ppu,
     cartridge: Cartridge,
+    clock_counter: u64,
     //clock: &Clock
     frame_delta_time: f64,
     debug_dissassembly: (HashMap<u16, u16>, Vec<String>),
@@ -26,11 +28,14 @@ impl Nes {
         let ram: CpuRAM = CpuRAM::new();
         let cpu: Cpu6502 = Cpu6502::new();
         let debug_dissassembly = (HashMap::new(), vec![]);
-        let ppu = Box::new(Ppu2C02::new());
+        let ppu_ram = Box::new(Ppu2c02RAM::new());
+        let ppu = Ppu::new();
         Nes {
             ram,
             cpu,
+            ppu_ram,
             ppu,
+            clock_counter: 0,
             frame_delta_time: 0.0,
             debug_dissassembly,
             cartridge: Cartridge::new(),
@@ -66,7 +71,7 @@ impl Nes {
     }
 
     pub fn reset(&mut self) {
-        let mut io = IODevice::new(&mut self.ram, &mut self.ppu, &mut self.cartridge);
+        let mut io = IODevice::new(&mut self.ram, &mut self.ppu_ram, &mut self.cartridge);
         self.cpu.reset(&mut io)
     }
 
@@ -180,7 +185,7 @@ impl Nes {
     }
 
     pub fn get_debug_ram(&mut self, start: u16, rows: u32, cols: u32) -> String {
-        let io = IODevice::new(&mut self.ram, &mut self.ppu, &mut self.cartridge);
+        let io = IODevice::new(&mut self.ram, &mut self.ppu_ram, &mut self.cartridge);
         let mut str = String::from("");
         let mut offset = 0;
         for _ in 0..rows {
@@ -202,9 +207,13 @@ impl Nes {
     }
 
     fn clock(&mut self) {
-        let mut io = IODevice::new(&mut self.ram, &mut self.ppu, &mut self.cartridge);
+        self.ppu.clock();
+        let mut io = IODevice::new(&mut self.ram, &mut self.ppu_ram, &mut self.cartridge);
         // self.cpu.clock(&mut self.ram);
-        self.cpu.clock(&mut io);
+        if self.clock_counter % 3 == 0 {
+            self.cpu.clock(&mut io);
+        }
+        self.clock_counter += 1;
     }
 
     fn insert_cartridge(&mut self, cartridge: Cartridge) {
@@ -212,7 +221,7 @@ impl Nes {
     }
 
     fn redissassamble(&mut self) {
-        let mut io = IODevice::new(&mut self.ram, &mut self.ppu, &mut self.cartridge);
+        let mut io = IODevice::new(&mut self.ram, &mut self.ppu_ram, &mut self.cartridge);
         self.debug_dissassembly = Disassembler::dissassemble(0x0000, 0xFFFF, &mut io);
     }
 }

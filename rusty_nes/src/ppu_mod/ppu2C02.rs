@@ -1,26 +1,26 @@
 use super::ppu::{PpuAddr, PpuRAM};
 
-pub struct Ppu2C02 {
+pub struct Ppu2c02RAM {
     name_table: [[u8; 1024]; 2],
-    palette_table: [u8; 32],
+    pattern_table: [u8; 32],
 }
 
-impl Ppu2C02 {
-    pub fn new() -> Ppu2C02 {
-        let ppu: Ppu2C02 = Ppu2C02 {
+impl Ppu2c02RAM {
+    pub fn new() -> Ppu2c02RAM {
+        let ppu: Ppu2c02RAM = Ppu2c02RAM {
             name_table: [[0; 1024]; 2],
-            palette_table: [0; 32],
+            pattern_table: [0; 32],
         };
         ppu
     }
 }
 
-impl PpuRAM for Ppu2C02 {
+impl PpuRAM for Ppu2c02RAM {
     fn cpu_read(&self, addr: u16, _readonly: bool) -> u8 {
         let mem_region = PpuAddr::to_ppuaddr(addr);
         match mem_region {
             PpuAddr::Control => return self.name_table[0][0], // Placeholder to avoid warning; Delete later
-            PpuAddr::Mask => return self.palette_table[0], // Placeholder to avoid warning; Delete later
+            PpuAddr::Mask => return self.pattern_table[0], // Placeholder to avoid warning; Delete later
             PpuAddr::Status => return 0,
             PpuAddr::OAMAddr => return 0,
             PpuAddr::OAMData => return 0,
