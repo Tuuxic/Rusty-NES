@@ -33,7 +33,7 @@ impl Nes {
             ppu,
             frame_delta_time: 0.0,
             debug_dissassembly,
-            cartridge: Cartridge,
+            cartridge: Cartridge::new(),
         }
     }
 
