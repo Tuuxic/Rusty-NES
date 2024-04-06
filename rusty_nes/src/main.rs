@@ -1,37 +1,41 @@
+mod addr_utils;
 mod bus_mod;
+mod cartridge_mod;
 mod cpu_mod;
 mod iodevice;
 mod nes;
+mod ppu_mod;
 
 use ggez::glam::Vec2;
 use ggez::graphics::Color;
+use ggez::input::keyboard::KeyCode;
 use ggez::{event, graphics};
 use ggez::{Context, ContextBuilder, GameError, GameResult};
 use nes::Nes;
-use ggez::input::keyboard::KeyCode;
 
 const GAME_ID: &str = "RustyNes";
 const AUTHOR_NAME: &str = "Nikolai Prjanikov";
 
 struct MainState {
     nes: Nes,
-    stepping_state: bool
+    stepping_state: bool,
 }
 
 impl MainState {
     fn new() -> GameResult<MainState> {
         let mut nes = Nes::new();
         nes.init();
-        let s: MainState = MainState { nes, stepping_state: true };
+        let s: MainState = MainState {
+            nes,
+            stepping_state: true,
+        };
         Ok(s)
     }
 }
 
 impl event::EventHandler<GameError> for MainState {
     fn update(&mut self, ctx: &mut Context) -> Result<(), GameError> {
-        while ctx.time.check_update_time(60) {
-            
-        }
+        while ctx.time.check_update_time(60) {}
         let keyboard = &ctx.keyboard;
         if keyboard.is_key_just_pressed(KeyCode::M) {
             self.stepping_state = !self.stepping_state;
@@ -48,11 +52,8 @@ impl event::EventHandler<GameError> for MainState {
     }
 
     fn draw(&mut self, _ctx: &mut Context) -> Result<(), GameError> {
-        while _ctx.time.check_update_time(60) {
-            
-        }
-        let mut canvas =
-            graphics::Canvas::from_frame(_ctx, Color::BLACK);
+        while _ctx.time.check_update_time(60) {}
+        let mut canvas = graphics::Canvas::from_frame(_ctx, Color::BLACK);
         let str: String = self.nes.get_debug_code();
         let code_txt = graphics::Text::new(str);
         let register_txt = graphics::Text::new(self.nes.get_debug_registers());
