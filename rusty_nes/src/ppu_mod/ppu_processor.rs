@@ -22,7 +22,6 @@ impl Ppu {
     }
 
     pub fn clock(&mut self) {
-        println!("Cycle: {}, Scanline {}", self.cycle, self.scanline);
         self.screen[((self.cycle) + self.scanline * 240) as usize] = Srgb::<u8>::new(0, 255, 0);
 
         self.cycle += 1;

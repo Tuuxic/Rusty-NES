@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::bus_mod::iodevice::IODevice;
+use crate::bus_mod::bus::Bus;
 
 use super::instruction::{AddrMode, Instruction};
 
@@ -9,7 +9,7 @@ impl Disassembler {
     pub fn dissassemble(
         start_addr: u16,
         end_addr: u16,
-        io: &mut IODevice,
+        io: &mut Bus,
     ) -> (HashMap<u16, u16>, Vec<String>) {
         let mut lines_map: HashMap<u16, u16> = HashMap::new();
         let mut instructions: Vec<String> = vec![];

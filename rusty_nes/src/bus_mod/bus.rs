@@ -1,26 +1,30 @@
-use crate::{addr_utils::AddrUtils, bus_mod::cpu_ram::CpuRAM, cartridge_mod::cartridge::Cartridge};
+use crate::{
+    addr_utils::AddrUtils,
+    bus_mod::cpu_ram::CpuRAM,
+    cartridge_mod::cartridge::{self, Cartridge},
+};
 
 use super::ppu_ram::PpuRAM;
 
-pub struct IODevice<'a> {
-    ram: &'a mut CpuRAM,
+pub struct Bus {
+    ram: Box<CpuRAM>,
     // PPU
-    ppu: &'a mut Box<dyn PpuRAM>,
+    ppu: Box<dyn PpuRAM>,
     // Cartrige
-    cartridge: &'a mut Cartridge,
+    cartridge: Box<Cartridge>,
 }
 
-impl IODevice<'_> {
-    pub fn new<'a>(
-        ram: &'a mut CpuRAM,
-        ppu: &'a mut Box<dyn PpuRAM>,
-        cartridge: &'a mut Cartridge,
-    ) -> IODevice<'a> {
-        IODevice {
+impl Bus {
+    pub fn new(ram: Box<CpuRAM>, ppu: Box<dyn PpuRAM>, cartridge: Box<Cartridge>) -> Bus {
+        Bus {
             ram,
             ppu,
             cartridge,
         }
+    }
+
+    pub fn changeCartridge(&mut self, cartridge: Box<Cartridge>) {
+        self.cartridge = cartridge;
     }
 
     pub fn cpu_write(&mut self, addr: u16, data: u8) {

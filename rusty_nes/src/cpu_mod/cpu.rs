@@ -1,12 +1,12 @@
-use crate::bus_mod::iodevice::IODevice;
+use crate::bus_mod::bus::Bus;
 
 use super::flags6502::Flags6502;
 
 pub trait Cpu {
-    fn reset(&mut self, io: &mut IODevice);
-    fn irq(&mut self, io: &mut IODevice);
-    fn nmi(&mut self, io: &mut IODevice);
-    fn clock(&mut self, io: &mut IODevice);
+    fn reset(&mut self, io: &mut Bus);
+    fn irq(&mut self, io: &mut Bus);
+    fn nmi(&mut self, io: &mut Bus);
+    fn clock(&mut self, io: &mut Bus);
 
     // fn completed_instruction(&mut self) -> bool;
 
@@ -15,5 +15,5 @@ pub trait Cpu {
     fn get_flag(&self, flag: Flags6502) -> u8;
     fn set_flag(&mut self, flag: Flags6502, value: bool);
 
-    fn fetch(&mut self, io: &mut IODevice) -> u8;
+    fn fetch(&mut self, io: &mut Bus) -> u8;
 }
