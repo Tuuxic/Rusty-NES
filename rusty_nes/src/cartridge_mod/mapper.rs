@@ -28,7 +28,7 @@ struct Mapper000 {
 
 impl Mapper for Mapper000 {
     fn cpu_map_read(&self, addr: u16, mapped_addr: &mut u32) -> bool {
-        if addr >= 0x8000 && addr <= 0xFFFF {
+        if addr >= 0x8000 {
             *mapped_addr = (addr & (if self.prg_banks > 1 { 0x7FFF } else { 0x3FFF })) as u32;
             return true;
         }
@@ -36,7 +36,7 @@ impl Mapper for Mapper000 {
     }
 
     fn cpu_map_write(&self, addr: u16, mapped_addr: &mut u32) -> bool {
-        if addr >= 0x8000 && addr <= 0xFFFF {
+        if addr >= 0x8000 {
             *mapped_addr = (addr & (if self.prg_banks > 1 { 0x7FFF } else { 0x3FFF })) as u32;
             return true;
         }
@@ -44,7 +44,7 @@ impl Mapper for Mapper000 {
     }
 
     fn ppu_map_read(&self, addr: u16, mapped_addr: &mut u32) -> bool {
-        if addr >= 0x0000 && addr <= 0x1FFF {
+        if addr <= 0x1FFF {
             *mapped_addr = addr as u32;
             return true;
         }
@@ -52,7 +52,7 @@ impl Mapper for Mapper000 {
     }
 
     fn ppu_map_write(&self, addr: u16, mapped_addr: &mut u32) -> bool {
-        if addr >= 0x0000 && addr <= 0x1FFF {
+        if addr <= 0x1FFF {
             if self.char_banks == 0 {
                 *mapped_addr = addr as u32;
                 return true;
