@@ -4,10 +4,14 @@ use super::mapper::{Mapper, MapperUtils};
 
 pub struct Cartridge {
     vprg_memory: Vec<u8>,
+    #[allow(unused)]
     vchr_memory: Vec<u8>,
 
+    #[allow(unused)]
     mapper_id: u8,
+    #[allow(unused)]
     prg_banks: u8,
+    #[allow(unused)]
     chr_banks: u8,
     mapper: Box<dyn Mapper>,
 }
@@ -23,6 +27,8 @@ impl Cartridge {
             mapper: MapperUtils::from_id(0),
         }
     }
+
+    #[allow(unused)]
     pub fn from_file(filename: &str) -> Cartridge {
         let content = fs::read(filename).expect("Failed reading the cartridge file");
         let mut offset: usize = 0;
@@ -76,6 +82,8 @@ impl Cartridge {
         }
         false
     }
+
+    #[allow(unused)]
     pub fn ppu_read(&self, addr: u16, data: &mut u8) -> bool {
         let mut mapped_addr: u32 = 0;
         if self.mapper.cpu_map_read(addr, &mut mapped_addr) {
@@ -84,6 +92,8 @@ impl Cartridge {
         }
         false
     }
+
+    #[allow(unused)]
     pub fn ppu_write(&mut self, addr: u16, data: u8) -> bool {
         let mut mapped_addr: u32 = 0;
         if self.mapper.cpu_map_read(addr, &mut mapped_addr) {
@@ -94,6 +104,7 @@ impl Cartridge {
     }
 }
 
+#[allow(unused)]
 struct INesHeader {
     name: [char; 4],
     prg_rom_chunks: u8,

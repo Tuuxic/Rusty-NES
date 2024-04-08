@@ -1,6 +1,7 @@
 use palette::Srgb;
 
 pub struct Ppu {
+    #[allow(unused)]
     colors: Vec<Srgb<u8>>,
     screen: Vec<Srgb<u8>>,
 

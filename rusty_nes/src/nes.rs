@@ -2,7 +2,7 @@ use std::{collections::HashMap, time::Duration};
 
 use crate::{
     bus_mod::{bus::Bus, cpu_ram::CpuRAM, ppu2c02_ram::Ppu2c02RAM, ppu_ram::PpuRAM},
-    cartridge_mod::cartridge::{self, Cartridge},
+    cartridge_mod::cartridge::Cartridge,
     cpu_mod::{cpu::Cpu, cpu6502::Cpu6502, disassembler::Disassembler},
     ppu_mod::ppu_processor::Ppu,
 };
@@ -47,8 +47,8 @@ impl Nes {
 
     pub fn init(&mut self) {
         let program: Vec<u8> = vec![
-            0xA2, 0x0A, 0x8E, 0x00, 0x00, 0xA2, 0x03, 0x8E, 0x01, 0x00, 0xAC, 0x00, 0x00, 0xA9,
-            0x00, 0x18, 0x6D, 0x01, 0x00, 0x88, 0xD0, 0xFA, 0x8D, 0x02, 0x00, 0xEA, 0xEA, 0xEA,
+            0xA2, 0x0A, 0x8E, 0xB0, 0x00, 0xA2, 0x03, 0x8E, 0xB1, 0x00, 0xAC, 0xB0, 0x00, 0xA9,
+            0x00, 0x18, 0x6D, 0xB1, 0x00, 0x88, 0xD0, 0xFA, 0x8D, 0xB2, 0x00, 0xEA, 0xEA, 0xEA,
             0x4c, 0x00, 0x00,
         ];
         let offset: u16 = 0x0000;
@@ -80,7 +80,9 @@ impl Nes {
     }
 
     pub fn step(&mut self) {
-        self.clock();
+        while self.cpu.cycles == 0 {
+            self.clock();
+        }
         while self.cpu.cycles != 0 {
             self.clock();
         }
@@ -220,8 +222,9 @@ impl Nes {
         self.clock_counter += 1;
     }
 
+    #[allow(unused)]
     fn insert_cartridge(&mut self, cartridge: Cartridge) {
-        self.io.changeCartridge(Box::new(cartridge));
+        self.io.change_cartridge(Box::new(cartridge));
         // self.cartridge = cartridge;
     }
 

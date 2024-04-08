@@ -1,8 +1,4 @@
-use crate::{
-    addr_utils::AddrUtils,
-    bus_mod::cpu_ram::CpuRAM,
-    cartridge_mod::cartridge::{self, Cartridge},
-};
+use crate::{addr_utils::AddrUtils, bus_mod::cpu_ram::CpuRAM, cartridge_mod::cartridge::Cartridge};
 
 use super::ppu_ram::PpuRAM;
 
@@ -23,7 +19,7 @@ impl Bus {
         }
     }
 
-    pub fn changeCartridge(&mut self, cartridge: Box<Cartridge>) {
+    pub fn change_cartridge(&mut self, cartridge: Box<Cartridge>) {
         self.cartridge = cartridge;
     }
 
@@ -49,6 +45,8 @@ impl Bus {
 
         0x00
     }
+
+    #[allow(unused)]
     fn ppu_read(&self, addr: u16, _readonly: bool) -> u8 {
         let mut data = 0;
         if self.cartridge.ppu_read(addr, &mut data) {
@@ -57,6 +55,7 @@ impl Bus {
         return 0;
     }
 
+    #[allow(unused)]
     fn ppu_write(&mut self, addr: u16, data: u8) {
         if self.cartridge.ppu_write(addr, data) {
             //
