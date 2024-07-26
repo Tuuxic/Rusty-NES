@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    bus_mod::bus::Bus,
+    bus::bus::Bus,
     cpu::operations::{addrmode::AddrMode, instruction::Instruction},
 };
 

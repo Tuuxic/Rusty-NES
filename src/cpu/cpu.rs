@@ -1,5 +1,5 @@
 use crate::addr_utils::AddrUtils;
-use crate::bus_mod::bus::Bus;
+use crate::bus::bus::Bus;
 
 use super::{
     cpu_flags::CpuFlags,

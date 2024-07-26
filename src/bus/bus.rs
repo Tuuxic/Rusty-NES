@@ -1,4 +1,4 @@
-use crate::{addr_utils::AddrUtils, bus_mod::cpu_ram::CpuRAM, cartridge_mod::cartridge::Cartridge};
+use crate::{addr_utils::AddrUtils, bus::cpu_ram::CpuRAM, cartridge::cartridge::Cartridge};
 
 use super::ppu_ram::PpuRAM;
 

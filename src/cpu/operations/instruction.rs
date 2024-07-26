@@ -1,4 +1,4 @@
-use crate::{bus_mod::bus::Bus, cpu::cpu::Cpu};
+use crate::{bus::bus::Bus, cpu::cpu::Cpu};
 
 use super::{addrmode::AddrMode, instr_mapping::InstructionMapping};
 

@@ -1,6 +1,6 @@
 use palette::Srgb;
 
-use crate::bus_mod::{bus::Bus, ppu2c02_ram::PpuStatusFlag};
+use crate::bus::{bus::Bus, ppu2c02_ram::PpuStatusFlag};
 
 pub struct Ppu {
     #[allow(unused)]

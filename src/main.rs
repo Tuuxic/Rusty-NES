@@ -1,10 +1,10 @@
 mod addr_utils;
-mod bus_mod;
-mod cartridge_mod;
+mod bus;
+mod cartridge;
 mod cpu;
 mod disassembler;
 mod nes;
-mod ppu_mod;
+mod ppu;
 
 use ggez::glam::Vec2;
 use ggez::graphics::Color;
