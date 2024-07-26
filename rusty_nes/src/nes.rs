@@ -3,7 +3,8 @@ use std::{collections::HashMap, time::Duration};
 use crate::{
     bus_mod::{bus::Bus, cpu_ram::CpuRAM, ppu2c02_ram::Ppu2c02RAM, ppu_ram::PpuRAM},
     cartridge_mod::cartridge::Cartridge,
-    cpu_mod::{cpu::Cpu, cpu6502::Cpu6502, disassembler::Disassembler},
+    cpu::cpu::Cpu,
+    disassembler::Disassembler,
     ppu_mod::ppu_processor::Ppu,
 };
 
@@ -12,7 +13,7 @@ pub const FRAME_LENGTH: Duration = Duration::from_millis(1); // Duration::new(0,
 pub struct Nes {
     // ram: CpuRAM,
     // TODO: Refactor Cpu6502 to Cpu
-    cpu: Cpu6502,
+    cpu: Cpu,
     // ppu_ram: Box<dyn PpuRAM>,
     ppu: Ppu,
     io: Bus,
@@ -26,7 +27,7 @@ pub struct Nes {
 impl Nes {
     pub fn new() -> Nes {
         let ram = Box::new(CpuRAM::new());
-        let cpu = Cpu6502::new();
+        let cpu = Cpu::new();
         let debug_dissassembly = (HashMap::new(), vec![]);
         let ppu_ram: Box<dyn PpuRAM> = Box::new(Ppu2c02RAM::new());
         let ppu = Ppu::new();
