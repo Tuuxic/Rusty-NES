@@ -4,6 +4,9 @@ impl AddrUtils {
     pub const CPU_RAM_ADDR_MAX: u16 = 0x1FFF;
     pub const CPU_RAM_ADDR_MIN: u16 = 0x0000;
 
+    pub const CPU_STACK_BASE_ADDR: u16 = 0x0100;
+    pub const CPU_START_ADDR: u16 = 0xFFFC;
+
     pub const PPU_RAM_ADDR_MAX: u16 = 0x3FFF;
     pub const PPU_RAM_ADDR_MIN: u16 = 0x2000;
 

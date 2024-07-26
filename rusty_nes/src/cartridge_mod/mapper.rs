@@ -1,3 +1,4 @@
+#[allow(unused)]
 pub trait Mapper {
     fn cpu_map_read(&self, addr: u16, mapped_addr: &mut u32) -> bool;
     fn cpu_map_write(&self, addr: u16, mapped_addr: &mut u32) -> bool;
@@ -21,6 +22,7 @@ impl MapperUtils {
         mapper
     }
 }
+#[allow(unused)]
 struct Mapper000 {
     prg_banks: u8,
     char_banks: u8,

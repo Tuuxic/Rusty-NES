@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
-use crate::bus_mod::bus::Bus;
-
-use super::instruction::{AddrMode, Instruction};
+use crate::{
+    bus_mod::bus::Bus,
+    cpu::operations::{addrmode::AddrMode, instruction::Instruction},
+};
 
 pub struct Disassembler;
 impl Disassembler {
