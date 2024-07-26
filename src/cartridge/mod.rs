@@ -1,2 +1,2 @@
 pub mod cartridge;
-pub mod mapper;
+mod mapper;

@@ -1,1 +1,1 @@
-pub mod ppu_processor;
+pub mod ppu;

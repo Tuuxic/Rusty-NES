@@ -1,48 +1,26 @@
 use std::{collections::HashMap, time::Duration};
 
-use crate::{
-    bus::{bus::Bus, cpu_ram::CpuRAM, ppu2c02_ram::Ppu2c02RAM, ppu_ram::PpuRAM},
-    cartridge::cartridge::Cartridge,
-    cpu::cpu::Cpu,
-    disassembler::Disassembler,
-    ppu::ppu_processor::Ppu,
-};
+use crate::{cartridge::cartridge::Cartridge, cpu::cpu::Cpu, disassembler::Disassembler};
 
 pub const FRAME_LENGTH: Duration = Duration::from_millis(1); // Duration::new(0, 16_666_666);
 
 pub struct Nes {
-    // ram: CpuRAM,
-    // TODO: Refactor Cpu6502 to Cpu
     cpu: Cpu,
-    // ppu_ram: Box<dyn PpuRAM>,
-    ppu: Ppu,
-    io: Bus,
-    // cartridge: Cartridge,
     clock_counter: u64,
-    //clock: &Clock
     frame_delta_time: f64,
     debug_dissassembly: (HashMap<u16, u16>, Vec<String>),
 }
 
 impl Nes {
     pub fn new() -> Nes {
-        let ram = Box::new(CpuRAM::new());
-        let cpu = Cpu::new();
         let debug_dissassembly = (HashMap::new(), vec![]);
-        let ppu_ram: Box<dyn PpuRAM> = Box::new(Ppu2c02RAM::new());
-        let ppu = Ppu::new();
         let cartridge = Box::new(Cartridge::new());
-        let io = Bus::new(ram, ppu_ram, cartridge);
+        let cpu = Cpu::new(cartridge);
         Nes {
-            // ram,
             cpu,
-            // ppu_ram,
-            ppu,
-            io,
             clock_counter: 0,
             frame_delta_time: 0.0,
             debug_dissassembly,
-            // cartridge,
         }
     }
 
@@ -56,14 +34,14 @@ impl Nes {
 
         for (i, num) in program.into_iter().enumerate() {
             // self.ram.ram[(offset as usize) + i] = num;
-            self.io.cpu_write(offset + (i as u16), num);
+            self.cpu.bus.write(offset + (i as u16), num);
         }
 
         // self.ram.ram[0xFFFC] = 0x00;
         // self.ram.ram[0xFFFD] = 0x80;
 
         // let mut io = IODevice::new(&mut self.ram);
-        self.debug_dissassembly = Disassembler::dissassemble(0x0000, 0xFFFF, &mut self.io);
+        self.debug_dissassembly = Disassembler::dissassemble(0x0000, 0xFFFF, &mut self.cpu.bus);
         self.reset();
     }
 
@@ -76,8 +54,7 @@ impl Nes {
     }
 
     pub fn reset(&mut self) {
-        // let mut io = IODevice::new(&mut self.ram, &mut self.ppu_ram, &mut self.cartridge);
-        self.cpu.reset(&mut self.io)
+        self.cpu.reset()
     }
 
     pub fn step(&mut self) {
@@ -201,7 +178,7 @@ impl Nes {
                 str.push_str(
                     &[
                         " ",
-                        &Disassembler::hex(self.io.cpu_read(start + offset) as u32, 2),
+                        &Disassembler::hex(self.cpu.bus.read(start + offset) as u32, 2),
                     ]
                     .join(""),
                 );
@@ -214,23 +191,19 @@ impl Nes {
     }
 
     fn clock(&mut self) {
-        self.ppu.clock(&mut self.io);
-        // let mut io = IODevice::new(&mut self.ram, &mut self.ppu_ram, &mut self.cartridge);
-        // self.cpu.clock(&mut self.ram);
+        self.cpu.clock_ppu();
         if self.clock_counter % 3 == 0 {
-            self.cpu.clock(&mut self.io);
+            self.cpu.clock();
         }
         self.clock_counter += 1;
     }
 
-    #[allow(unused)]
+    #[allow(unused)] // TODO: Remove unused
     fn insert_cartridge(&mut self, cartridge: Cartridge) {
-        self.io.change_cartridge(Box::new(cartridge));
-        // self.cartridge = cartridge;
+        self.cpu.bus.change_cartridge(Box::new(cartridge));
     }
 
     fn redissassamble(&mut self) {
-        // let mut io = IODevice::new(&mut self.ram, &mut self.ppu_ram, &mut self.cartridge);
-        self.debug_dissassembly = Disassembler::dissassemble(0x0000, 0xFFFF, &mut self.io);
+        self.debug_dissassembly = Disassembler::dissassemble(0x0000, 0xFFFF, &mut self.cpu.bus);
     }
 }

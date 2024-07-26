@@ -1,6 +1,6 @@
 use palette::Srgb;
 
-use crate::bus::{bus::Bus, ppu2c02_ram::PpuStatusFlag};
+use crate::{bus::ppu_bus::PpuBus, cartridge::cartridge::Cartridge, ram::ppu_ram::PpuStatusFlag};
 
 pub struct Ppu {
     #[allow(unused)]
@@ -10,27 +10,32 @@ pub struct Ppu {
     frame_complete: bool,
     scanline: i16,
     cycle: i16,
+
+    pub bus: Box<PpuBus>,
 }
 
 impl Ppu {
-    pub fn new() -> Ppu {
+    pub fn new(cartridge: Box<Cartridge>) -> Ppu {
         let ppu: Ppu = Ppu {
             colors: vec![Srgb::<u8>::new(0, 0, 0); 0x40],
             screen: vec![Srgb::<u8>::new(0, 0, 0); 256 * 240],
             frame_complete: false,
             scanline: 0,
             cycle: 0,
+            bus: Box::new(PpuBus::new(cartridge)),
         };
         ppu
     }
 
-    pub fn clock(&mut self, bus: &mut Bus) {
+    pub fn clock(&mut self) {
         if self.scanline == -1 && self.cycle == 1 {
-            bus.ppu_ram
+            self.bus
+                .ram
                 .set_status_flag(PpuStatusFlag::VERTICAL_BLANK, false);
         }
         if self.scanline == 241 && self.cycle == 1 {
-            bus.ppu_ram
+            self.bus
+                .ram
                 .set_status_flag(PpuStatusFlag::VERTICAL_BLANK, true);
             // if (bus.ppu.control.enable_nmi) {
             //     nmi = true;

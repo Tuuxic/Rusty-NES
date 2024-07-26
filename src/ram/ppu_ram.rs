@@ -1,9 +1,37 @@
 use bitflags::bitflags;
 
-use super::ppu_ram::{PpuAddr, PpuRAM};
+use crate::addr_utils::AddrUtils;
+
+pub enum PpuAddr {
+    Control,
+    Mask,
+    Status,
+    OAMAddr,
+    OAMData,
+    Scroll,
+    PPUAddr,
+    PPUData,
+    Invalid,
+}
+
+impl PpuAddr {
+    pub fn to_ppuaddr(addr: u16) -> PpuAddr {
+        match addr {
+            AddrUtils::PPU_CONTROL_ADDR => PpuAddr::Control,
+            AddrUtils::PPU_MASK_ADDR => PpuAddr::Mask,
+            AddrUtils::PPU_STATUS_ADDR => PpuAddr::Status,
+            AddrUtils::PPU_OAMADDRESS_ADDR => PpuAddr::OAMAddr,
+            AddrUtils::PPU_OAMDATA_ADDR => PpuAddr::OAMData,
+            AddrUtils::PPU_SCROLL_ADDR => PpuAddr::Scroll,
+            AddrUtils::PPU_PPUADDRESS_ADDR => PpuAddr::PPUAddr,
+            AddrUtils::PPU_PPUDATA_ADDR => PpuAddr::PPUData,
+            _ => PpuAddr::Invalid,
+        }
+    }
+}
 
 #[allow(unused)]
-pub struct Ppu2c02RAM {
+pub struct PpuRAM {
     status: u8,
     mask: u8,
     control: u8,
@@ -15,9 +43,9 @@ pub struct Ppu2c02RAM {
     pattern_table: [[u8; 4096]; 2],
 }
 
-impl Ppu2c02RAM {
-    pub fn new() -> Ppu2c02RAM {
-        let ppu: Ppu2c02RAM = Ppu2c02RAM {
+impl PpuRAM {
+    pub fn new() -> PpuRAM {
+        let ppu: PpuRAM = PpuRAM {
             status: 0,
             mask: 0,
             control: 0,
@@ -32,64 +60,8 @@ impl Ppu2c02RAM {
     }
 }
 
-impl PpuRAM for Ppu2c02RAM {
-    fn cpu_read(&mut self, addr: u16, _readonly: bool) -> u8 {
-        let mem_region = PpuAddr::to_ppuaddr(addr);
-        match mem_region {
-            PpuAddr::Control => return 0,
-            PpuAddr::Mask => return 0,
-            PpuAddr::Status => {
-                let data = (self.status & 0xE0) | (self.data_buffer & 0x1F);
-
-                self.set_status_flag(PpuStatusFlag::VERTICAL_BLANK, false);
-                return data;
-            }
-            PpuAddr::OAMAddr => return 0,
-            PpuAddr::OAMData => return 0,
-            PpuAddr::Scroll => return 0,
-            PpuAddr::PPUAddr => return 0,
-            PpuAddr::PPUData => {
-                let mut data = self.data_buffer;
-                self.data_buffer = self.ppu_read(self.ppu_address, true);
-
-                // Palette Infomation is loaded directly
-                if self.ppu_address > 0x3F00 {
-                    data = self.data_buffer;
-                }
-                self.ppu_address += 1;
-                return data;
-            }
-            PpuAddr::Invalid => return 0,
-        }
-    }
-
-    fn cpu_write(&mut self, addr: u16, data: u8) {
-        let mem_region = PpuAddr::to_ppuaddr(addr);
-        match mem_region {
-            PpuAddr::Control => self.control = data,
-            PpuAddr::Mask => self.mask = data,
-            PpuAddr::Status => return,
-            PpuAddr::OAMAddr => return,
-            PpuAddr::OAMData => return,
-            PpuAddr::Scroll => return,
-            PpuAddr::PPUAddr => {
-                if self.address_latch == 0 {
-                    self.ppu_address = (self.ppu_address & 0x00FF) | ((data as u16) << 8);
-                    self.address_latch = 1;
-                } else {
-                    self.ppu_address = (self.ppu_address & 0xFF00) | (data as u16);
-                    self.address_latch = 0;
-                }
-            }
-            PpuAddr::PPUData => {
-                self.ppu_write(addr, data);
-                self.ppu_address += 1;
-            }
-            PpuAddr::Invalid => return,
-        }
-    }
-
-    fn ppu_read(&self, addr: u16, _readonly: bool) -> u8 {
+impl PpuRAM {
+    pub fn read(&self, addr: u16, _readonly: bool) -> u8 {
         let mut index: usize = (addr as usize) & 0x3FFF;
         if addr <= 0x1FFF {
             // Pattern Memory
@@ -117,7 +89,7 @@ impl PpuRAM for Ppu2c02RAM {
         return 0;
     }
 
-    fn ppu_write(&mut self, addr: u16, data: u8) {
+    pub fn write(&mut self, addr: u16, data: u8) {
         let mut index: usize = (addr as usize) & 0x3FFF;
         if addr <= 0x1FFF {
             // Pattern Memory
@@ -145,7 +117,7 @@ impl PpuRAM for Ppu2c02RAM {
         }
     }
 
-    fn set_status_flag(&mut self, flag: PpuStatusFlag, value: bool) {
+    pub fn set_status_flag(&mut self, flag: PpuStatusFlag, value: bool) {
         if value {
             self.status |= flag.bits();
         } else {

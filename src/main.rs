@@ -5,6 +5,7 @@ mod cpu;
 mod disassembler;
 mod nes;
 mod ppu;
+mod ram;
 
 use ggez::glam::Vec2;
 use ggez::graphics::Color;
