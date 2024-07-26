@@ -1,11 +1,14 @@
 use crate::addr_utils::AddrUtils;
 
+use super::ppu2c02_ram::PpuStatusFlag;
+
 pub trait PpuRAM {
-    fn cpu_read(&self, addr: u16, readonly: bool) -> u8;
+    fn cpu_read(&mut self, addr: u16, readonly: bool) -> u8;
     fn cpu_write(&mut self, addr: u16, data: u8);
 
     fn ppu_read(&self, addr: u16, readonly: bool) -> u8;
     fn ppu_write(&mut self, addr: u16, data: u8);
+    fn set_status_flag(&mut self, flag: PpuStatusFlag, value: bool);
 }
 
 pub enum PpuAddr {

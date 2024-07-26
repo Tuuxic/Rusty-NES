@@ -1,8 +1,8 @@
 mod addr_utils;
 mod bus_mod;
 mod cartridge_mod;
-mod cpu_mod;
-mod iodevice;
+mod cpu;
+mod disassembler;
 mod nes;
 mod ppu_mod;
 
