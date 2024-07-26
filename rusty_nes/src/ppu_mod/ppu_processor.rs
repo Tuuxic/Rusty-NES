@@ -1,5 +1,7 @@
 use palette::Srgb;
 
+use crate::bus_mod::{bus::Bus, ppu2c02_ram::PpuStatusFlag};
+
 pub struct Ppu {
     #[allow(unused)]
     colors: Vec<Srgb<u8>>,
@@ -22,9 +24,19 @@ impl Ppu {
         ppu
     }
 
-    pub fn clock(&mut self) {
+    pub fn clock(&mut self, bus: &mut Bus) {
+        if self.scanline == -1 && self.cycle == 1 {
+            bus.ppu_ram
+                .set_status_flag(PpuStatusFlag::VERTICAL_BLANK, false);
+        }
+        if self.scanline == 241 && self.cycle == 1 {
+            bus.ppu_ram
+                .set_status_flag(PpuStatusFlag::VERTICAL_BLANK, true);
+            // if (bus.ppu.control.enable_nmi) {
+            //     nmi = true;
+            // }
+        }
         self.screen[((self.cycle) + self.scanline * 240) as usize] = Srgb::<u8>::new(0, 255, 0);
-
         self.cycle += 1;
         if self.cycle >= 341 {
             // Scan line length
@@ -36,4 +48,6 @@ impl Ppu {
             self.frame_complete = true;
         }
     }
+
+    // TODO: GetPatternTable
 }

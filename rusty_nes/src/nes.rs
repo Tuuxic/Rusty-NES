@@ -213,7 +213,7 @@ impl Nes {
     }
 
     fn clock(&mut self) {
-        self.ppu.clock();
+        self.ppu.clock(&mut self.io);
         // let mut io = IODevice::new(&mut self.ram, &mut self.ppu_ram, &mut self.cartridge);
         // self.cpu.clock(&mut self.ram);
         if self.clock_counter % 3 == 0 {
