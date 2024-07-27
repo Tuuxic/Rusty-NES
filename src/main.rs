@@ -4,7 +4,7 @@ mod bus;
 mod cartridge;
 mod constants;
 mod cpu;
-mod disassembler;
+mod debug;
 mod engine;
 mod nes;
 mod ppu;
