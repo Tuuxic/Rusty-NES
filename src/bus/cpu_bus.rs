@@ -1,6 +1,4 @@
-use crate::{
-    addr_utils::AddrUtils, cartridge::cartridge::Cartridge, ppu::ppu::Ppu, ram::cpu_ram::CpuRAM,
-};
+use crate::{cartridge::cartridge::Cartridge, constants, ppu::ppu::Ppu, ram::cpu_ram::CpuRAM};
 
 pub struct CpuBus {
     ram: Box<CpuRAM>,
@@ -24,9 +22,9 @@ impl CpuBus {
     pub fn write(&mut self, addr: u16, data: u8) {
         if self.cartridge.cpu_write(addr, data) {
             //
-        } else if addr >= AddrUtils::CPU_RAM_ADDR_MIN && addr <= AddrUtils::CPU_RAM_ADDR_MAX {
+        } else if addr >= constants::cpu::RAM_ADDR_MIN && addr <= constants::cpu::RAM_ADDR_MAX {
             self.ram.write(addr & 0x07FF, data);
-        } else if addr >= AddrUtils::PPU_RAM_ADDR_MIN && addr <= AddrUtils::PPU_RAM_ADDR_MAX {
+        } else if addr >= constants::ppu::RAM_ADDR_MIN && addr <= constants::ppu::RAM_ADDR_MAX {
             self.ppu.bus.write(addr & 0x0007, data);
         }
     }
@@ -35,9 +33,9 @@ impl CpuBus {
         let mut data = 0;
         if self.cartridge.cpu_read(addr, &mut data) {
             //
-        } else if addr >= AddrUtils::CPU_RAM_ADDR_MIN && addr <= AddrUtils::CPU_RAM_ADDR_MAX {
+        } else if addr >= constants::cpu::RAM_ADDR_MIN && addr <= constants::cpu::RAM_ADDR_MAX {
             return self.ram.read(addr & 0x07FF);
-        } else if addr >= AddrUtils::PPU_RAM_ADDR_MIN && addr <= AddrUtils::PPU_RAM_ADDR_MAX {
+        } else if addr >= constants::ppu::RAM_ADDR_MIN && addr <= constants::ppu::RAM_ADDR_MAX {
             return self.ppu.bus.read(addr & 0x0007, true);
         }
 

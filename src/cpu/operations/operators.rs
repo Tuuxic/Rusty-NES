@@ -1,4 +1,4 @@
-use crate::addr_utils::AddrUtils;
+use crate::constants;
 use crate::cpu::cpu::Cpu;
 use crate::cpu::cpu_flags::CpuFlags;
 
@@ -218,19 +218,19 @@ impl Operation for BRK {
 
         cpu.set_flag(CpuFlags::I, true);
         cpu.bus.write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16),
+            constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16),
             ((cpu.pc >> 8) & 0x00FF) as u8,
         );
         cpu.stkp -= 1;
         cpu.bus.write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16),
+            constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16),
             (cpu.pc & 0x00FF) as u8,
         );
         cpu.stkp -= 1;
 
         cpu.set_flag(CpuFlags::B, true);
         cpu.bus.write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16),
+            constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16),
             cpu.status,
         );
         cpu.stkp -= 1;
@@ -445,13 +445,13 @@ impl Operation for JSR {
         cpu.pc -= 1;
 
         cpu.bus.write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16),
+            constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16),
             ((cpu.pc >> 8) & 0x00FF) as u8,
         );
         cpu.stkp -= 1;
 
         cpu.bus.write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16),
+            constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16),
             (cpu.pc & 0x00FF) as u8,
         );
         cpu.stkp -= 1;
@@ -552,7 +552,7 @@ pub struct PHA;
 impl Operation for PHA {
     fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.bus
-            .write(AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16), cpu.a);
+            .write(constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16), cpu.a);
         cpu.stkp -= 1;
         0
     }
@@ -562,7 +562,7 @@ pub struct PHP;
 impl Operation for PHP {
     fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.bus.write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16),
+            constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16),
             cpu.status | CpuFlags::B.0 | CpuFlags::U.0,
         );
         cpu.set_flag(CpuFlags::B, false);
@@ -579,7 +579,7 @@ impl Operation for PLA {
         cpu.stkp += 1;
         cpu.a = cpu
             .bus
-            .read(AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16));
+            .read(constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16));
 
         cpu.set_flag(CpuFlags::Z, cpu.a == 0x00);
         cpu.set_flag(CpuFlags::N, (cpu.a & 0x80) != 0);
@@ -594,7 +594,7 @@ impl Operation for PLP {
         cpu.stkp += 1;
         cpu.status = cpu
             .bus
-            .read(AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16));
+            .read(constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16));
 
         cpu.set_flag(CpuFlags::U, true);
 
@@ -654,18 +654,18 @@ impl Operation for RTI {
         cpu.stkp += 1;
         cpu.status = cpu
             .bus
-            .read(AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16));
+            .read(constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16));
         cpu.status &= !CpuFlags::B.0;
         cpu.status &= !CpuFlags::U.0;
 
         cpu.stkp += 1;
         cpu.pc = cpu
             .bus
-            .read(AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16)) as u16;
+            .read(constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16)) as u16;
         cpu.stkp += 1;
         cpu.pc |= (cpu
             .bus
-            .read(AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16)) as u16)
+            .read(constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16)) as u16)
             << 8;
         0
     }
@@ -677,11 +677,11 @@ impl Operation for RTS {
         cpu.stkp += 1;
         cpu.pc = cpu
             .bus
-            .read(AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16)) as u16;
+            .read(constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16)) as u16;
         cpu.stkp += 1;
         cpu.pc |= (cpu
             .bus
-            .read(AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16)) as u16)
+            .read(constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16)) as u16)
             << 8;
 
         cpu.pc += 1;

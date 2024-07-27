@@ -1,6 +1,6 @@
-use crate::addr_utils::AddrUtils;
 use crate::bus::cpu_bus::CpuBus;
 use crate::cartridge::cartridge::Cartridge;
+use crate::constants;
 
 use super::{
     cpu_flags::CpuFlags,
@@ -60,7 +60,7 @@ impl Cpu {
     }
 
     pub fn reset(&mut self) {
-        self.addr_abs = AddrUtils::CPU_START_ADDR;
+        self.addr_abs = constants::cpu::START_ADDR;
 
         let lo: u16 = self.bus.read(self.addr_abs + 0) as u16;
         let hi: u16 = self.bus.read(self.addr_abs + 1) as u16;
@@ -85,13 +85,13 @@ impl Cpu {
         // Save PC on stack
 
         self.bus.write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (self.stkp as u16),
+            constants::cpu::STACK_BASE_ADDR + (self.stkp as u16),
             ((self.pc >> 8) & 0x00FF) as u8,
         );
         self.stkp -= 1;
 
         self.bus.write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (self.stkp as u16),
+            constants::cpu::STACK_BASE_ADDR + (self.stkp as u16),
             (self.pc & 0x00FF) as u8,
         );
         self.stkp -= 1;
@@ -101,7 +101,7 @@ impl Cpu {
         self.set_flag(CpuFlags::I, true);
 
         self.bus.write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (self.stkp as u16),
+            constants::cpu::STACK_BASE_ADDR + (self.stkp as u16),
             self.status,
         );
         self.stkp -= 1;
@@ -118,13 +118,13 @@ impl Cpu {
     #[allow(unused)] // TODO: Remove unused
     fn nmi(&mut self) {
         self.bus.write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (self.stkp as u16),
+            constants::cpu::STACK_BASE_ADDR + (self.stkp as u16),
             ((self.pc >> 8) & 0x00FF) as u8,
         );
         self.stkp -= 1;
 
         self.bus.write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (self.stkp as u16),
+            constants::cpu::STACK_BASE_ADDR + (self.stkp as u16),
             (self.pc & 0x00FF) as u8,
         );
         self.stkp -= 1;
@@ -134,7 +134,7 @@ impl Cpu {
         self.set_flag(CpuFlags::I, true);
 
         self.bus.write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (self.stkp as u16),
+            constants::cpu::STACK_BASE_ADDR + (self.stkp as u16),
             self.status,
         );
         self.stkp -= 1;

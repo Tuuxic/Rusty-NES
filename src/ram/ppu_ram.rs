@@ -1,6 +1,6 @@
 use bitflags::bitflags;
 
-use crate::addr_utils::AddrUtils;
+use crate::constants;
 
 pub enum PpuAddr {
     Control,
@@ -14,17 +14,17 @@ pub enum PpuAddr {
     Invalid,
 }
 
-impl PpuAddr {
-    pub fn to_ppuaddr(addr: u16) -> PpuAddr {
+impl From<u16> for PpuAddr {
+    fn from(addr: u16) -> PpuAddr {
         match addr {
-            AddrUtils::PPU_CONTROL_ADDR => PpuAddr::Control,
-            AddrUtils::PPU_MASK_ADDR => PpuAddr::Mask,
-            AddrUtils::PPU_STATUS_ADDR => PpuAddr::Status,
-            AddrUtils::PPU_OAMADDRESS_ADDR => PpuAddr::OAMAddr,
-            AddrUtils::PPU_OAMDATA_ADDR => PpuAddr::OAMData,
-            AddrUtils::PPU_SCROLL_ADDR => PpuAddr::Scroll,
-            AddrUtils::PPU_PPUADDRESS_ADDR => PpuAddr::PPUAddr,
-            AddrUtils::PPU_PPUDATA_ADDR => PpuAddr::PPUData,
+            constants::ppu::CONTROL_ADDR => PpuAddr::Control,
+            constants::ppu::MASK_ADDR => PpuAddr::Mask,
+            constants::ppu::STATUS_ADDR => PpuAddr::Status,
+            constants::ppu::OAMADDRESS_ADDR => PpuAddr::OAMAddr,
+            constants::ppu::OAMDATA_ADDR => PpuAddr::OAMData,
+            constants::ppu::SCROLL_ADDR => PpuAddr::Scroll,
+            constants::ppu::PPUADDRESS_ADDR => PpuAddr::PPUAddr,
+            constants::ppu::PPUDATA_ADDR => PpuAddr::PPUData,
             _ => PpuAddr::Invalid,
         }
     }
@@ -45,7 +45,7 @@ pub struct PpuRAM {
 
 impl PpuRAM {
     pub fn new() -> PpuRAM {
-        let ppu: PpuRAM = PpuRAM {
+        PpuRAM {
             status: 0,
             mask: 0,
             control: 0,
@@ -55,8 +55,7 @@ impl PpuRAM {
             name_table: [[0; 1024]; 2],
             palette_table: [0; 32],
             pattern_table: [[0; 4096]; 2],
-        };
-        ppu
+        }
     }
 }
 
