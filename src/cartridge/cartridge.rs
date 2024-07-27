@@ -1,6 +1,6 @@
 use std::fs;
 
-use super::mapper::{Mapper, MapperUtils};
+use super::mapper::{Mapper, MapperId};
 
 pub struct Cartridge {
     vprg_memory: Vec<u8>,
@@ -24,7 +24,7 @@ impl Cartridge {
             mapper_id: 0,
             prg_banks: 1,
             chr_banks: 1,
-            mapper: MapperUtils::from_id(0),
+            mapper: MapperId(0).into(),
         }
     }
 
@@ -62,7 +62,7 @@ impl Cartridge {
             mapper_id,
             prg_banks,
             chr_banks,
-            mapper: MapperUtils::from_id(mapper_id),
+            mapper: MapperId(mapper_id).into(),
         }
     }
 

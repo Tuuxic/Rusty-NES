@@ -6,9 +6,10 @@ pub trait Mapper {
     fn ppu_map_write(&self, addr: u16, mapped_addr: &mut u32) -> bool;
 }
 
-pub struct MapperUtils;
-impl MapperUtils {
-    pub fn from_id(id: u8) -> Box<dyn Mapper> {
+pub struct MapperId(pub u8);
+impl From<MapperId> for Box<dyn Mapper> {
+    fn from(mapper_id: MapperId) -> Box<dyn Mapper> {
+        let MapperId(id) = mapper_id;
         let mapper: Box<dyn Mapper> = match id {
             0 => Box::new(Mapper000 {
                 prg_banks: 1,

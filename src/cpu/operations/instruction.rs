@@ -1,6 +1,6 @@
 use crate::cpu::cpu::Cpu;
 
-use super::addrmode::AddrMode;
+use super::{addrmode::AddrMode, opcodes::Opcode};
 
 pub struct Instruction {
     name: String,
@@ -28,7 +28,7 @@ impl Instruction {
     }
 
     pub fn from_opcode(opcode: u8) -> Instruction {
-        let instr: Instruction = opcode.into();
+        let instr: Instruction = Opcode(opcode).into();
         instr
     }
 
