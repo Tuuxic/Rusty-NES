@@ -1,3 +1,5 @@
+use std::{cell::RefCell, rc::Rc};
+
 use palette::Srgb;
 
 use crate::{bus::ppu_bus::PpuBus, cartridge::cartridge::Cartridge, ram::ppu_ram::PpuStatusFlag};
@@ -15,7 +17,7 @@ pub struct Ppu {
 }
 
 impl Ppu {
-    pub fn new(cartridge: Box<Cartridge>) -> Ppu {
+    pub fn new(cartridge: Rc<RefCell<Cartridge>>) -> Ppu {
         let ppu: Ppu = Ppu {
             colors: vec![Srgb::<u8>::new(0, 0, 0); 0x40],
             screen: vec![Srgb::<u8>::new(0, 0, 0); 256 * 240],

@@ -1,10 +1,11 @@
+use bincode::deserialize;
+use serde::Deserialize;
 use std::fs;
 
 use super::mapper::{Mapper, MapperId};
 
 pub struct Cartridge {
     vprg_memory: Vec<u8>,
-    #[allow(unused)]
     vchr_memory: Vec<u8>,
 
     #[allow(unused)]
@@ -28,33 +29,46 @@ impl Cartridge {
         }
     }
 
-    #[allow(unused)]
     pub fn from_file(filename: &str) -> Cartridge {
         let content = fs::read(filename).expect("Failed reading the cartridge file");
-        let mut offset: usize = 0;
-        let header = INesHeader::new(&content);
-        offset += 16; // Header Size
-        offset += 512; // Trainer Size
+        let mut header_bytes: [u8; 16] = [0x00; 16];
 
-        let mapper_id = ((header.mapper2 >> 4) << 4) | (header.mapper1 >> 4);
+        for i in 0..16 {
+            header_bytes[i] = content[i]
+        }
 
-        // If filetype == 1 START
+        let header = INesHeader::new(header_bytes);
+        let mapper_id = header.mapper_id();
         let prg_banks = header.prg_rom_chunks;
-        let mut vprg_memory = vec![0; prg_banks as usize * 16384];
-        for i in 0..vprg_memory.len() {
-            vprg_memory[i] = content[offset + i];
-        }
-        offset += vprg_memory.len(); // vPRG Memory Size
-
         let chr_banks = header.chr_rom_chunks;
-        let mut vchr_memory = vec![0; chr_banks as usize * 8192];
 
-        for i in 0..vchr_memory.len() {
-            vchr_memory[i] = content[offset + i];
+        let mut offset: usize = 0;
+        offset += 16; // Header Size
+
+        if header.has_trainer() {
+            offset += 512; // Trainer Size
         }
-        // offset += vchr_memory.len(); // vPRG Memory Size
 
-        // If filetype == 1 END
+        let filetype = 1;
+        let mut vprg_memory = vec![];
+        let mut vchr_memory = vec![];
+
+        if filetype == 1 {
+            vprg_memory = vec![0; prg_banks as usize * 16384];
+            for i in 0..vprg_memory.len() {
+                vprg_memory[i] = content[offset + i];
+            }
+            offset += vprg_memory.len(); // vPRG Memory Size
+
+            vchr_memory = vec![0; chr_banks as usize * 8192];
+
+            for i in 0..vchr_memory.len() {
+                vchr_memory[i] = content[offset + i];
+            }
+            offset += vchr_memory.len(); // vPRG Memory Size
+        }
+
+        assert_eq!(offset, content.len());
 
         Cartridge {
             vprg_memory,
@@ -76,27 +90,25 @@ impl Cartridge {
     }
     pub fn cpu_write(&mut self, addr: u16, data: u8) -> bool {
         let mut mapped_addr: u32 = 0;
-        if self.mapper.cpu_map_read(addr, &mut mapped_addr) {
+        if self.mapper.cpu_map_write(addr, &mut mapped_addr) {
             self.vprg_memory[mapped_addr as usize] = data;
             return true;
         }
         false
     }
 
-    #[allow(unused)]
     pub fn ppu_read(&self, addr: u16, data: &mut u8) -> bool {
         let mut mapped_addr: u32 = 0;
-        if self.mapper.cpu_map_read(addr, &mut mapped_addr) {
+        if self.mapper.ppu_map_read(addr, &mut mapped_addr) {
             *data = self.vchr_memory[mapped_addr as usize];
             return true;
         }
         false
     }
 
-    #[allow(unused)]
     pub fn ppu_write(&mut self, addr: u16, data: u8) -> bool {
         let mut mapped_addr: u32 = 0;
-        if self.mapper.cpu_map_read(addr, &mut mapped_addr) {
+        if self.mapper.ppu_map_write(addr, &mut mapped_addr) {
             self.vchr_memory[mapped_addr as usize] = data;
             return true;
         }
@@ -104,6 +116,7 @@ impl Cartridge {
     }
 }
 
+#[derive(Deserialize, Debug)]
 #[allow(unused)]
 struct INesHeader {
     name: [char; 4],
@@ -114,11 +127,19 @@ struct INesHeader {
     prg_ram_size: u8,
     tv_system1: u8,
     ty_system2: u8,
+    _unused: [u8; 5],
 }
 
 impl INesHeader {
-    pub fn new(data: &Vec<u8>) -> INesHeader {
-        let header: INesHeader = unsafe { std::ptr::read(data.as_ptr() as *const _) };
-        header
+    pub fn new(data: [u8; 16]) -> INesHeader {
+        deserialize(&data).unwrap()
+    }
+
+    pub fn has_trainer(&self) -> bool {
+        return (self.mapper1 & 0x08) != 0;
+    }
+
+    pub fn mapper_id(&self) -> u8 {
+        ((self.mapper2 >> 4) << 4) | (self.mapper1 >> 4)
     }
 }

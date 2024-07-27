@@ -1,4 +1,4 @@
-use std::{collections::HashMap, time::Duration};
+use std::{cell::RefCell, collections::HashMap, rc::Rc, time::Duration};
 
 use crate::{cartridge::cartridge::Cartridge, cpu::cpu::Cpu, disassembler::Disassembler};
 
@@ -14,8 +14,7 @@ pub struct Nes {
 impl Nes {
     pub fn new() -> Nes {
         let debug_dissassembly = (HashMap::new(), vec![]);
-        let cartridge = Box::new(Cartridge::new());
-        let cpu = Cpu::new(cartridge);
+        let cpu = Cpu::new();
         Nes {
             cpu,
             clock_counter: 0,
@@ -25,24 +24,26 @@ impl Nes {
     }
 
     pub fn init(&mut self) {
-        let program: Vec<u8> = vec![
-            0xA2, 0x0A, 0x8E, 0xB0, 0x00, 0xA2, 0x03, 0x8E, 0xB1, 0x00, 0xAC, 0xB0, 0x00, 0xA9,
-            0x00, 0x18, 0x6D, 0xB1, 0x00, 0x88, 0xD0, 0xFA, 0x8D, 0xB2, 0x00, 0xEA, 0xEA, 0xEA,
-            0x4c, 0x00, 0x00,
-        ];
-        let offset: u16 = 0x0000;
+        // let program: Vec<u8> = vec![
+        //     0xA2, 0x0A, 0x8E, 0xB0, 0x00, 0xA2, 0x03, 0x8E, 0xB1, 0x00, 0xAC, 0xB0, 0x00, 0xA9,
+        //     0x00, 0x18, 0x6D, 0xB1, 0x00, 0x88, 0xD0, 0xFA, 0x8D, 0xB2, 0x00, 0xEA, 0xEA, 0xEA,
+        //     0x8D, 0x00, 0x20, 0x4c, 0x00, 0x00,
+        // ];
+        // let offset: u16 = 0x0000;
 
-        for (i, num) in program.into_iter().enumerate() {
-            // self.ram.ram[(offset as usize) + i] = num;
-            self.cpu.bus.write(offset + (i as u16), num);
-        }
+        // for (i, num) in program.into_iter().enumerate() {
+        //     // self.ram.ram[(offset as usize) + i] = num;
+        //     self.cpu.bus.write(offset + (i as u16), num);
+        // }
 
-        // self.ram.ram[0xFFFC] = 0x00;
-        // self.ram.ram[0xFFFD] = 0x80;
-
-        // let mut io = IODevice::new(&mut self.ram);
         self.debug_dissassembly = Disassembler::dissassemble(0x0000, 0xFFFF, &mut self.cpu.bus);
         self.reset();
+    }
+
+    pub fn insert_cartridge(&mut self, path: &str) {
+        let cartridge: Rc<RefCell<Cartridge>> = Rc::new(RefCell::new(Cartridge::from_file(path)));
+        self.cpu.bus.change_cartridge(cartridge);
+        self.init();
     }
 
     pub fn update(&mut self, dt: Duration) {
@@ -196,11 +197,6 @@ impl Nes {
             self.cpu.clock();
         }
         self.clock_counter += 1;
-    }
-
-    #[allow(unused)] // TODO: Remove unused
-    fn insert_cartridge(&mut self, cartridge: Cartridge) {
-        self.cpu.bus.change_cartridge(Box::new(cartridge));
     }
 
     fn redissassamble(&mut self) {

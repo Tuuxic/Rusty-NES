@@ -1,5 +1,4 @@
 use crate::bus::cpu_bus::CpuBus;
-use crate::cartridge::cartridge::Cartridge;
 use crate::constants;
 
 use super::{
@@ -36,11 +35,11 @@ pub struct Cpu {
     pub clock_count: u32,
 
     // Connected Data Bus
-    pub bus: CpuBus,
+    pub bus: Box<CpuBus>,
 }
 
 impl Cpu {
-    pub fn new(cartridge: Box<Cartridge>) -> Cpu {
+    pub fn new() -> Cpu {
         Cpu {
             a: 0x00,
             x: 0x00,
@@ -55,7 +54,7 @@ impl Cpu {
             opcode: 0x00,
             cycles: 0,
             clock_count: 0,
-            bus: CpuBus::new(cartridge),
+            bus: Box::new(CpuBus::new()),
         }
     }
 

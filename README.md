@@ -1,3 +1,3 @@
 # RustyNES
 
-A NES Emulator build to learn the Rust Programming Language
+A NES Emulator built to learn the Rust Programming Language

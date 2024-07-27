@@ -1,3 +1,5 @@
+use std::env;
+
 use ggez::glam::Vec2;
 use ggez::graphics::Color;
 use ggez::input::keyboard::KeyCode;
@@ -17,7 +19,9 @@ struct MainState {
 impl MainState {
     fn new() -> GameResult<MainState> {
         let mut nes = Nes::new();
-        nes.init();
+        let args: Vec<String> = env::args().collect();
+        let rom_file = &args[1];
+        nes.insert_cartridge(rom_file);
         let s: MainState = MainState {
             nes,
             stepping_state: true,
