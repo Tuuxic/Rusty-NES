@@ -1,5 +1,6 @@
-use crate::addr_utils::AddrUtils;
-use crate::bus::bus::Bus;
+use crate::bus::cpu_bus::CpuBus;
+use crate::cartridge::cartridge::Cartridge;
+use crate::constants;
 
 use super::{
     cpu_flags::CpuFlags,
@@ -7,176 +8,143 @@ use super::{
 };
 
 pub struct Cpu {
+    // Registers
     pub a: u8,
-
     pub x: u8,
-
     pub y: u8,
 
+    // Pointer
     pub stkp: u8,
-
     pub pc: u16,
 
+    // Flags
     pub status: u8,
 
-    // internal helper
+    // Internal Helpers
     pub fetched: u8,
-
     pub temp: u16,
 
+    // Addresses
     pub addr_abs: u16,
-
     pub addr_rel: u16,
 
+    // Current OP Code
     pub opcode: u8,
 
+    // Timing
     pub cycles: u8,
-
     pub clock_count: u32,
+
+    // Connected Data Bus
+    pub bus: CpuBus,
 }
 
 impl Cpu {
-    pub fn new() -> Cpu {
+    pub fn new(cartridge: Box<Cartridge>) -> Cpu {
         Cpu {
             a: 0x00,
-
             x: 0x00,
-
             y: 0x00,
-
             stkp: 0x00,
-
             pc: 0x0000,
-
             status: 0x00,
-
             fetched: 0x00,
-
             temp: 0x0000,
-
             addr_abs: 0x0000,
-
             addr_rel: 0x0000,
-
             opcode: 0x00,
-
             cycles: 0,
-
             clock_count: 0,
+            bus: CpuBus::new(cartridge),
         }
     }
 
-    pub fn reset(&mut self, bus: &mut Bus) {
-        self.addr_abs = AddrUtils::CPU_START_ADDR;
+    pub fn reset(&mut self) {
+        self.addr_abs = constants::cpu::START_ADDR;
 
-        let lo: u16 = bus.cpu_read(self.addr_abs + 0) as u16;
-
-        let hi: u16 = bus.cpu_read(self.addr_abs + 1) as u16;
+        let lo: u16 = self.bus.read(self.addr_abs + 0) as u16;
+        let hi: u16 = self.bus.read(self.addr_abs + 1) as u16;
 
         self.pc = (hi << 8) | lo;
-
         self.a = 0;
-
         self.x = 0;
-
         self.y = 0;
-
         self.stkp = 0xFD;
-
         self.status = (0x00 | lo) as u8;
-
         self.addr_rel = 0x0000;
-
         self.addr_abs = 0x0000;
-
         self.fetched = 0x00;
-
         self.cycles = 0;
     }
 
     #[allow(unused)] // TODO: Remove unused
-    fn irq(&mut self, bus: &mut Bus) {
+    fn irq(&mut self) {
         if self.get_flag(CpuFlags::I) != 0 {
             return;
         }
-
         // Save PC on stack
 
-        bus.cpu_write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (self.stkp as u16),
+        self.bus.write(
+            constants::cpu::STACK_BASE_ADDR + (self.stkp as u16),
             ((self.pc >> 8) & 0x00FF) as u8,
         );
-
         self.stkp -= 1;
 
-        bus.cpu_write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (self.stkp as u16),
+        self.bus.write(
+            constants::cpu::STACK_BASE_ADDR + (self.stkp as u16),
             (self.pc & 0x00FF) as u8,
         );
-
         self.stkp -= 1;
 
         self.set_flag(CpuFlags::B, false);
-
         self.set_flag(CpuFlags::U, true);
-
         self.set_flag(CpuFlags::I, true);
 
-        bus.cpu_write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (self.stkp as u16),
+        self.bus.write(
+            constants::cpu::STACK_BASE_ADDR + (self.stkp as u16),
             self.status,
         );
-
         self.stkp -= 1;
 
         self.addr_abs = 0xFFFE;
 
-        let lo: u16 = bus.cpu_read(self.addr_abs) as u16;
-
-        let hi: u16 = bus.cpu_read(self.addr_abs + 1) as u16;
+        let lo: u16 = self.bus.read(self.addr_abs) as u16;
+        let hi: u16 = self.bus.read(self.addr_abs + 1) as u16;
 
         self.pc = (hi << 8) | lo;
-
         self.cycles = 7;
     }
 
     #[allow(unused)] // TODO: Remove unused
-    fn nmi(&mut self, bus: &mut Bus) {
-        bus.cpu_write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (self.stkp as u16),
+    fn nmi(&mut self) {
+        self.bus.write(
+            constants::cpu::STACK_BASE_ADDR + (self.stkp as u16),
             ((self.pc >> 8) & 0x00FF) as u8,
         );
-
         self.stkp -= 1;
 
-        bus.cpu_write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (self.stkp as u16),
+        self.bus.write(
+            constants::cpu::STACK_BASE_ADDR + (self.stkp as u16),
             (self.pc & 0x00FF) as u8,
         );
-
         self.stkp -= 1;
 
         self.set_flag(CpuFlags::B, false);
-
         self.set_flag(CpuFlags::U, true);
-
         self.set_flag(CpuFlags::I, true);
 
-        bus.cpu_write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (self.stkp as u16),
+        self.bus.write(
+            constants::cpu::STACK_BASE_ADDR + (self.stkp as u16),
             self.status,
         );
-
         self.stkp -= 1;
 
         self.addr_abs = 0xFFFA;
 
-        let lo: u16 = bus.cpu_read(self.addr_abs) as u16;
-
-        let hi: u16 = bus.cpu_read(self.addr_abs + 1) as u16;
+        let lo: u16 = self.bus.read(self.addr_abs) as u16;
+        let hi: u16 = self.bus.read(self.addr_abs + 1) as u16;
 
         self.pc = (hi << 8) | lo;
-
         self.cycles = 8;
     }
 
@@ -200,33 +168,25 @@ impl Cpu {
         }
     }
 
-    pub fn fetch(&mut self, bus: &mut Bus) -> u8 {
+    pub fn fetch(&mut self) -> u8 {
         if !matches!(
             Instruction::from_opcode(self.opcode).get_addrmode(),
             AddrMode::IMP
         ) {
-            self.fetched = bus.cpu_read(self.addr_abs);
+            self.fetched = self.bus.read(self.addr_abs);
         }
         self.fetched
     }
 
-    pub fn clock(&mut self, bus: &mut Bus) {
+    pub fn clock(&mut self) {
         if self.cycles <= 0 {
-            self.opcode = bus.cpu_read(self.pc);
-
+            self.opcode = self.bus.read(self.pc);
             self.set_flag(CpuFlags::U, true);
-
             self.pc += 1;
 
             let instr: Instruction = Instruction::from_opcode(self.opcode);
-
             self.cycles = instr.get_cycles();
-
-            let add_cycles_addr: u8 = instr.execute_addrmode(self, bus); // lookup
-
-            let add_cycles_op: u8 = instr.execute_operator(self, bus); // lookup
-
-            self.cycles += add_cycles_addr & add_cycles_op;
+            self.cycles += instr.execute(self);
 
             self.set_flag(CpuFlags::U, true);
         }
@@ -236,5 +196,9 @@ impl Cpu {
         if self.cycles != 0 {
             self.cycles -= 1;
         }
+    }
+
+    pub fn clock_ppu(&mut self) {
+        self.bus.ppu.clock()
     }
 }

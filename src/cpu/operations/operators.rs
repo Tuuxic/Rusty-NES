@@ -1,5 +1,4 @@
-use crate::addr_utils::AddrUtils;
-use crate::bus::bus::Bus;
+use crate::constants;
 use crate::cpu::cpu::Cpu;
 use crate::cpu::cpu_flags::CpuFlags;
 
@@ -9,8 +8,8 @@ use super::instruction::{Instruction, Operation};
 // Operators
 pub struct ADC;
 impl Operation for ADC {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
 
         cpu.temp = cpu.a as u16 + cpu.fetched as u16 + cpu.get_flag(CpuFlags::C) as u16;
 
@@ -30,8 +29,8 @@ impl Operation for ADC {
 
 pub struct SBC;
 impl Operation for SBC {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
 
         let value: u16 = (cpu.fetched as u16) ^ 0x00FF;
         cpu.temp = cpu.a as u16 + value + cpu.get_flag(CpuFlags::C) as u16;
@@ -52,8 +51,8 @@ impl Operation for SBC {
 
 pub struct AND;
 impl Operation for AND {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
         cpu.a = cpu.a & cpu.fetched;
 
         cpu.set_flag(CpuFlags::Z, cpu.a == 0);
@@ -64,8 +63,8 @@ impl Operation for AND {
 
 pub struct ASL;
 impl Operation for ASL {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
         cpu.temp = (cpu.fetched as u16) << 1;
 
         cpu.set_flag(CpuFlags::C, (cpu.temp & 0xFF00) > 0);
@@ -77,7 +76,7 @@ impl Operation for ASL {
         ) {
             cpu.a = (cpu.temp & 0x00FF) as u8;
         } else {
-            bus.cpu_write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8);
+            cpu.bus.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8);
         }
         0
     }
@@ -85,7 +84,7 @@ impl Operation for ASL {
 
 pub struct BCC;
 impl Operation for BCC {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         if cpu.get_flag(CpuFlags::C) == 0 {
             cpu.cycles += 1; // Maybe move to return value
 
@@ -104,7 +103,7 @@ impl Operation for BCC {
 
 pub struct BCS;
 impl Operation for BCS {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         if cpu.get_flag(CpuFlags::C) == 1 {
             cpu.cycles += 1; // Maybe move to return value
 
@@ -123,7 +122,7 @@ impl Operation for BCS {
 
 pub struct BEQ;
 impl Operation for BEQ {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         if cpu.get_flag(CpuFlags::Z) == 1 {
             cpu.cycles += 1; // Maybe move to return value
 
@@ -142,8 +141,8 @@ impl Operation for BEQ {
 
 pub struct BIT;
 impl Operation for BIT {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
 
         cpu.temp = (cpu.a & cpu.fetched) as u16;
 
@@ -157,7 +156,7 @@ impl Operation for BIT {
 
 pub struct BMI;
 impl Operation for BMI {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         if cpu.get_flag(CpuFlags::N) == 1 {
             cpu.cycles += 1; // Maybe move to return value
 
@@ -176,7 +175,7 @@ impl Operation for BMI {
 
 pub struct BNE;
 impl Operation for BNE {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         if cpu.get_flag(CpuFlags::Z) == 0 {
             cpu.cycles += 1; // Maybe move to return value
 
@@ -195,7 +194,7 @@ impl Operation for BNE {
 
 pub struct BPL;
 impl Operation for BPL {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         if cpu.get_flag(CpuFlags::N) == 0 {
             cpu.cycles += 1; // Maybe move to return value
 
@@ -214,37 +213,37 @@ impl Operation for BPL {
 
 pub struct BRK;
 impl Operation for BRK {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.pc += 1;
 
         cpu.set_flag(CpuFlags::I, true);
-        bus.cpu_write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16),
+        cpu.bus.write(
+            constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16),
             ((cpu.pc >> 8) & 0x00FF) as u8,
         );
         cpu.stkp -= 1;
-        bus.cpu_write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16),
+        cpu.bus.write(
+            constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16),
             (cpu.pc & 0x00FF) as u8,
         );
         cpu.stkp -= 1;
 
         cpu.set_flag(CpuFlags::B, true);
-        bus.cpu_write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16),
+        cpu.bus.write(
+            constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16),
             cpu.status,
         );
         cpu.stkp -= 1;
         cpu.set_flag(CpuFlags::B, false);
 
-        cpu.pc = bus.cpu_read(0xFFFE) as u16 | ((bus.cpu_read(0xFFFF) as u16) << 8);
+        cpu.pc = cpu.bus.read(0xFFFE) as u16 | ((cpu.bus.read(0xFFFF) as u16) << 8);
         0
     }
 }
 
 pub struct BVC;
 impl Operation for BVC {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         if cpu.get_flag(CpuFlags::V) == 0 {
             cpu.cycles += 1; // Maybe move to return value
 
@@ -263,7 +262,7 @@ impl Operation for BVC {
 
 pub struct BVS;
 impl Operation for BVS {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         if cpu.get_flag(CpuFlags::V) == 1 {
             cpu.cycles += 1; // Maybe move to return value
 
@@ -282,7 +281,7 @@ impl Operation for BVS {
 
 pub struct CLC;
 impl Operation for CLC {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.set_flag(CpuFlags::C, false);
         0
     }
@@ -290,7 +289,7 @@ impl Operation for CLC {
 
 pub struct CLD;
 impl Operation for CLD {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.set_flag(CpuFlags::D, false);
         0
     }
@@ -298,7 +297,7 @@ impl Operation for CLD {
 
 pub struct CLI;
 impl Operation for CLI {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.set_flag(CpuFlags::I, false);
         0
     }
@@ -306,7 +305,7 @@ impl Operation for CLI {
 
 pub struct CLV;
 impl Operation for CLV {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.set_flag(CpuFlags::V, false);
         0
     }
@@ -314,8 +313,8 @@ impl Operation for CLV {
 
 pub struct CMP;
 impl Operation for CMP {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
         cpu.temp = cpu.a as u16 - cpu.fetched as u16;
 
         cpu.set_flag(CpuFlags::C, cpu.a >= cpu.fetched);
@@ -327,8 +326,8 @@ impl Operation for CMP {
 
 pub struct CPX;
 impl Operation for CPX {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
         cpu.temp = cpu.x as u16 - cpu.fetched as u16;
 
         cpu.set_flag(CpuFlags::C, cpu.x >= cpu.fetched);
@@ -340,8 +339,8 @@ impl Operation for CPX {
 
 pub struct CPY;
 impl Operation for CPY {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
         cpu.temp = cpu.y as u16 - cpu.fetched as u16;
 
         cpu.set_flag(CpuFlags::C, cpu.y >= cpu.fetched);
@@ -353,10 +352,10 @@ impl Operation for CPY {
 
 pub struct DEC;
 impl Operation for DEC {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
         cpu.temp = (cpu.fetched - 1) as u16;
-        bus.cpu_write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8);
+        cpu.bus.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8);
         cpu.set_flag(CpuFlags::Z, (cpu.temp & 0x00FF) == 0x0000);
         cpu.set_flag(CpuFlags::N, (cpu.temp & 0x0080) != 0);
         0
@@ -365,7 +364,7 @@ impl Operation for DEC {
 
 pub struct DEX;
 impl Operation for DEX {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.x -= 1;
         cpu.set_flag(CpuFlags::Z, cpu.x == 0x00);
         cpu.set_flag(CpuFlags::N, (cpu.x & 0x80) != 0);
@@ -375,7 +374,7 @@ impl Operation for DEX {
 
 pub struct DEY;
 impl Operation for DEY {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.y -= 1;
         cpu.set_flag(CpuFlags::Z, cpu.y == 0x00);
         cpu.set_flag(CpuFlags::N, (cpu.y & 0x80) != 0);
@@ -385,8 +384,8 @@ impl Operation for DEY {
 
 pub struct EOR;
 impl Operation for EOR {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
         cpu.a = cpu.a ^ cpu.fetched;
 
         cpu.set_flag(CpuFlags::Z, cpu.a == 0x00);
@@ -398,11 +397,11 @@ impl Operation for EOR {
 
 pub struct INC;
 impl Operation for INC {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
 
         cpu.temp = (cpu.fetched as u16) + 1;
-        bus.cpu_write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8);
+        cpu.bus.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8);
         cpu.set_flag(CpuFlags::Z, (cpu.temp & 0x00FF) == 0x0000);
         cpu.set_flag(CpuFlags::N, (cpu.temp & 0x0080) != 0);
 
@@ -412,7 +411,7 @@ impl Operation for INC {
 
 pub struct INX;
 impl Operation for INX {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.x += 1;
         cpu.set_flag(CpuFlags::Z, cpu.x == 0x00);
         cpu.set_flag(CpuFlags::N, (cpu.x & 0x80) != 0);
@@ -423,7 +422,7 @@ impl Operation for INX {
 
 pub struct INY;
 impl Operation for INY {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.y += 1;
         cpu.set_flag(CpuFlags::Z, cpu.y == 0x00);
         cpu.set_flag(CpuFlags::N, (cpu.y & 0x80) != 0);
@@ -434,7 +433,7 @@ impl Operation for INY {
 
 pub struct JMP;
 impl Operation for JMP {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.pc = cpu.addr_abs;
         0
     }
@@ -442,17 +441,17 @@ impl Operation for JMP {
 
 pub struct JSR;
 impl Operation for JSR {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.pc -= 1;
 
-        bus.cpu_write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16),
+        cpu.bus.write(
+            constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16),
             ((cpu.pc >> 8) & 0x00FF) as u8,
         );
         cpu.stkp -= 1;
 
-        bus.cpu_write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16),
+        cpu.bus.write(
+            constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16),
             (cpu.pc & 0x00FF) as u8,
         );
         cpu.stkp -= 1;
@@ -464,8 +463,8 @@ impl Operation for JSR {
 
 pub struct LDA;
 impl Operation for LDA {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
 
         cpu.a = cpu.fetched;
         cpu.set_flag(CpuFlags::Z, cpu.a == 0x00);
@@ -476,8 +475,8 @@ impl Operation for LDA {
 
 pub struct LDX;
 impl Operation for LDX {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
 
         cpu.x = cpu.fetched;
         cpu.set_flag(CpuFlags::Z, cpu.x == 0x00);
@@ -488,8 +487,8 @@ impl Operation for LDX {
 
 pub struct LDY;
 impl Operation for LDY {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
 
         cpu.y = cpu.fetched;
         cpu.set_flag(CpuFlags::Z, cpu.y == 0x00);
@@ -500,8 +499,8 @@ impl Operation for LDY {
 
 pub struct LSR;
 impl Operation for LSR {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
         cpu.set_flag(CpuFlags::C, (cpu.fetched & 0x0001) != 0);
         cpu.temp = (cpu.fetched >> 1) as u16;
 
@@ -514,7 +513,7 @@ impl Operation for LSR {
         ) {
             cpu.a = (cpu.temp & 0x00FF) as u8;
         } else {
-            bus.cpu_write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8)
+            cpu.bus.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8)
         }
 
         0
@@ -523,7 +522,7 @@ impl Operation for LSR {
 
 pub struct NOP;
 impl Operation for NOP {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         // Not all nops are equal
         // TODO: Implement illegal opcodes
 
@@ -538,8 +537,8 @@ impl Operation for NOP {
 
 pub struct ORA;
 impl Operation for ORA {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
         cpu.a = cpu.a | cpu.fetched;
 
         cpu.set_flag(CpuFlags::Z, cpu.a == 0x00);
@@ -551,8 +550,9 @@ impl Operation for ORA {
 
 pub struct PHA;
 impl Operation for PHA {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        bus.cpu_write(AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16), cpu.a);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.bus
+            .write(constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16), cpu.a);
         cpu.stkp -= 1;
         0
     }
@@ -560,9 +560,9 @@ impl Operation for PHA {
 
 pub struct PHP;
 impl Operation for PHP {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        bus.cpu_write(
-            AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16),
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.bus.write(
+            constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16),
             cpu.status | CpuFlags::B.0 | CpuFlags::U.0,
         );
         cpu.set_flag(CpuFlags::B, false);
@@ -575,9 +575,11 @@ impl Operation for PHP {
 
 pub struct PLA;
 impl Operation for PLA {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.stkp += 1;
-        cpu.a = bus.cpu_read(AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16));
+        cpu.a = cpu
+            .bus
+            .read(constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16));
 
         cpu.set_flag(CpuFlags::Z, cpu.a == 0x00);
         cpu.set_flag(CpuFlags::N, (cpu.a & 0x80) != 0);
@@ -588,9 +590,11 @@ impl Operation for PLA {
 
 pub struct PLP;
 impl Operation for PLP {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.stkp += 1;
-        cpu.status = bus.cpu_read(AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16));
+        cpu.status = cpu
+            .bus
+            .read(constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16));
 
         cpu.set_flag(CpuFlags::U, true);
 
@@ -600,8 +604,8 @@ impl Operation for PLP {
 
 pub struct ROL;
 impl Operation for ROL {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
         cpu.temp = ((cpu.fetched << 1) as u16) | (cpu.get_flag(CpuFlags::C) as u16);
 
         cpu.set_flag(CpuFlags::C, (cpu.temp & 0xFF00) != 0x0000);
@@ -614,7 +618,7 @@ impl Operation for ROL {
         ) {
             cpu.a = (cpu.temp & 0x00FF) as u8;
         } else {
-            bus.cpu_write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8)
+            cpu.bus.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8)
         }
 
         0
@@ -623,8 +627,8 @@ impl Operation for ROL {
 
 pub struct ROR;
 impl Operation for ROR {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        cpu.fetch(bus);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetch();
         cpu.temp = ((cpu.get_flag(CpuFlags::C) << 7) as u16) | ((cpu.fetched >> 1) as u16);
 
         cpu.set_flag(CpuFlags::C, (cpu.fetched & 0x01) != 0x00);
@@ -637,7 +641,7 @@ impl Operation for ROR {
         ) {
             cpu.a = (cpu.temp & 0x00FF) as u8;
         } else {
-            bus.cpu_write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8)
+            cpu.bus.write(cpu.addr_abs, (cpu.temp & 0x00FF) as u8)
         }
 
         0
@@ -646,27 +650,39 @@ impl Operation for ROR {
 
 pub struct RTI;
 impl Operation for RTI {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.stkp += 1;
-        cpu.status = bus.cpu_read(AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16));
+        cpu.status = cpu
+            .bus
+            .read(constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16));
         cpu.status &= !CpuFlags::B.0;
         cpu.status &= !CpuFlags::U.0;
 
         cpu.stkp += 1;
-        cpu.pc = bus.cpu_read(AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16)) as u16;
+        cpu.pc = cpu
+            .bus
+            .read(constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16)) as u16;
         cpu.stkp += 1;
-        cpu.pc |= (bus.cpu_read(AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16)) as u16) << 8;
+        cpu.pc |= (cpu
+            .bus
+            .read(constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16)) as u16)
+            << 8;
         0
     }
 }
 
 pub struct RTS;
 impl Operation for RTS {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.stkp += 1;
-        cpu.pc = bus.cpu_read(AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16)) as u16;
+        cpu.pc = cpu
+            .bus
+            .read(constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16)) as u16;
         cpu.stkp += 1;
-        cpu.pc |= (bus.cpu_read(AddrUtils::CPU_STACK_BASE_ADDR + (cpu.stkp as u16)) as u16) << 8;
+        cpu.pc |= (cpu
+            .bus
+            .read(constants::cpu::STACK_BASE_ADDR + (cpu.stkp as u16)) as u16)
+            << 8;
 
         cpu.pc += 1;
         0
@@ -675,7 +691,7 @@ impl Operation for RTS {
 
 pub struct SEC;
 impl Operation for SEC {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.set_flag(CpuFlags::C, true);
         0
     }
@@ -683,7 +699,7 @@ impl Operation for SEC {
 
 pub struct SED;
 impl Operation for SED {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.set_flag(CpuFlags::D, true);
         0
     }
@@ -691,7 +707,7 @@ impl Operation for SED {
 
 pub struct SEI;
 impl Operation for SEI {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.set_flag(CpuFlags::I, true);
         0
     }
@@ -699,31 +715,31 @@ impl Operation for SEI {
 
 pub struct STA;
 impl Operation for STA {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        bus.cpu_write(cpu.addr_abs, cpu.a);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.bus.write(cpu.addr_abs, cpu.a);
         0
     }
 }
 
 pub struct STX;
 impl Operation for STX {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        bus.cpu_write(cpu.addr_abs, cpu.x);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.bus.write(cpu.addr_abs, cpu.x);
         0
     }
 }
 
 pub struct STY;
 impl Operation for STY {
-    fn execute(&self, cpu: &mut Cpu, bus: &mut Bus) -> u8 {
-        bus.cpu_write(cpu.addr_abs, cpu.y);
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
+        cpu.bus.write(cpu.addr_abs, cpu.y);
         0
     }
 }
 
 pub struct TAX;
 impl Operation for TAX {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.x = cpu.a;
         cpu.set_flag(CpuFlags::Z, cpu.x == 0x00);
         cpu.set_flag(CpuFlags::N, (cpu.x & 0x80) != 0);
@@ -733,7 +749,7 @@ impl Operation for TAX {
 
 pub struct TAY;
 impl Operation for TAY {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.y = cpu.a;
         cpu.set_flag(CpuFlags::Z, cpu.y == 0x00);
         cpu.set_flag(CpuFlags::N, (cpu.y & 0x80) != 0);
@@ -743,7 +759,7 @@ impl Operation for TAY {
 
 pub struct TSX;
 impl Operation for TSX {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.x = cpu.stkp;
         cpu.set_flag(CpuFlags::Z, cpu.x == 0x00);
         cpu.set_flag(CpuFlags::N, (cpu.x & 0x80) != 0);
@@ -753,7 +769,7 @@ impl Operation for TSX {
 
 pub struct TXA;
 impl Operation for TXA {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.a = cpu.x;
         cpu.set_flag(CpuFlags::Z, cpu.a == 0x00);
         cpu.set_flag(CpuFlags::N, (cpu.a & 0x80) != 0);
@@ -763,7 +779,7 @@ impl Operation for TXA {
 
 pub struct TXS;
 impl Operation for TXS {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.stkp = cpu.x;
         0
     }
@@ -771,7 +787,7 @@ impl Operation for TXS {
 
 pub struct TYA;
 impl Operation for TYA {
-    fn execute(&self, cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, cpu: &mut Cpu) -> u8 {
         cpu.a = cpu.y;
         cpu.set_flag(CpuFlags::Z, cpu.a == 0x00);
         cpu.set_flag(CpuFlags::N, (cpu.a & 0x80) != 0);
@@ -781,7 +797,7 @@ impl Operation for TYA {
 
 pub struct XXX;
 impl Operation for XXX {
-    fn execute(&self, _cpu: &mut Cpu, _bus: &mut Bus) -> u8 {
+    fn execute(&self, _cpu: &mut Cpu) -> u8 {
         0
     }
 }
