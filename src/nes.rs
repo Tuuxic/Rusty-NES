@@ -12,13 +12,11 @@ pub struct Nes {
 
 impl Nes {
     pub fn new() -> Nes {
-        // let debug_dissassembly = (HashMap::new(), vec![]);
         let cpu = Cpu::new();
         Nes {
             cpu,
             clock_counter: 0,
             frame_delta_time: 0.0,
-            // debug_dissassembly,
         }
     }
 

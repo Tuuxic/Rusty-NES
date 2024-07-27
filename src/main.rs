@@ -5,7 +5,7 @@ mod cartridge;
 mod constants;
 mod cpu;
 mod debug;
-mod engine;
+mod emulator;
 mod nes;
 mod ppu;
 mod ram;
@@ -13,7 +13,7 @@ mod ram;
 #[allow(arithmetic_overflow)]
 fn main() {
     if env::args().len() != 2 {
-        panic!("Provide path to ROM as argument")
+        panic!("ERROR: Provide Path to ROM as Argument!")
     }
-    _ = engine::start();
+    emulator::start();
 }

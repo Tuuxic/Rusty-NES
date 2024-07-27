@@ -1,3 +1,8 @@
+pub mod emulator {
+    pub const GAME_ID: &str = "RustyNes";
+    pub const AUTHOR_NAME: &str = "Nikolai Prjanikov";
+}
+
 pub mod cpu {
 
     pub const RAM_SIZE: u32 = 2048;

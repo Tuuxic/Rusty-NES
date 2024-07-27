@@ -1,18 +1,18 @@
 use std::env;
 
-use ggez::event::{run, EventHandler};
-use ggez::glam::Vec2;
-use ggez::graphics::{Canvas, Color, Text};
-use ggez::input::keyboard::KeyCode;
-use ggez::{Context, ContextBuilder, GameError, GameResult};
+use ggez::{
+    event::EventHandler,
+    glam::Vec2,
+    graphics::{Canvas, Color, Text},
+    input::keyboard::KeyCode,
+    Context, GameError, GameResult,
+};
 
-use crate::debug::cpu_debug::CpuDebug;
 use crate::nes::Nes;
 
-const GAME_ID: &str = "RustyNes";
-const AUTHOR_NAME: &str = "Nikolai Prjanikov";
+use super::cpu_debug::CpuDebug;
 
-struct MainState {
+pub struct CpuView {
     nes: Nes,
     debug: CpuDebug,
     exec_state: ExecState,
@@ -25,8 +25,8 @@ enum ExecState {
     UPDATE,
 }
 
-impl MainState {
-    fn new() -> GameResult<MainState> {
+impl CpuView {
+    pub fn new() -> GameResult<CpuView> {
         let mut nes = Nes::new();
         let args: Vec<String> = env::args().collect();
         let rom_file = &args[1];
@@ -34,7 +34,7 @@ impl MainState {
 
         let debug = CpuDebug::new(&mut nes);
 
-        let s: MainState = MainState {
+        let s: CpuView = CpuView {
             nes,
             debug,
             exec_state: ExecState::STEPPING,
@@ -43,7 +43,7 @@ impl MainState {
     }
 }
 
-impl EventHandler<GameError> for MainState {
+impl EventHandler<GameError> for CpuView {
     fn update(&mut self, ctx: &mut Context) -> Result<(), GameError> {
         let keyboard = &ctx.keyboard;
         if keyboard.is_key_just_pressed(KeyCode::M) {
@@ -96,12 +96,4 @@ impl EventHandler<GameError> for MainState {
         canvas.finish(_ctx)?;
         Ok(())
     }
-}
-
-pub fn start() -> GameResult {
-    let cb: ContextBuilder = ContextBuilder::new(GAME_ID, AUTHOR_NAME);
-    let (ctx, event_loop) = cb.build()?;
-    let state: MainState = MainState::new()?;
-
-    run(ctx, event_loop, state);
 }
