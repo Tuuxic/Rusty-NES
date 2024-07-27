@@ -82,7 +82,7 @@ impl Cartridge {
 
     pub fn cpu_read(&self, addr: u16, data: &mut u8) -> bool {
         let mut mapped_addr: u32 = 0;
-        if self.mapper.cpu_map_read(addr, &mut mapped_addr) {
+        if self.mapper.cpu_read(addr, &mut mapped_addr) {
             *data = self.vprg_memory[mapped_addr as usize];
             return true;
         }
@@ -90,7 +90,7 @@ impl Cartridge {
     }
     pub fn cpu_write(&mut self, addr: u16, data: u8) -> bool {
         let mut mapped_addr: u32 = 0;
-        if self.mapper.cpu_map_write(addr, &mut mapped_addr) {
+        if self.mapper.cpu_write(addr, &mut mapped_addr) {
             self.vprg_memory[mapped_addr as usize] = data;
             return true;
         }
@@ -99,7 +99,7 @@ impl Cartridge {
 
     pub fn ppu_read(&self, addr: u16, data: &mut u8) -> bool {
         let mut mapped_addr: u32 = 0;
-        if self.mapper.ppu_map_read(addr, &mut mapped_addr) {
+        if self.mapper.ppu_read(addr, &mut mapped_addr) {
             *data = self.vchr_memory[mapped_addr as usize];
             return true;
         }
@@ -108,7 +108,7 @@ impl Cartridge {
 
     pub fn ppu_write(&mut self, addr: u16, data: u8) -> bool {
         let mut mapped_addr: u32 = 0;
-        if self.mapper.ppu_map_write(addr, &mut mapped_addr) {
+        if self.mapper.ppu_write(addr, &mut mapped_addr) {
             self.vchr_memory[mapped_addr as usize] = data;
             return true;
         }
