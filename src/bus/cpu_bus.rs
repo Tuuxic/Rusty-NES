@@ -30,6 +30,7 @@ impl CpuBus {
             self.ram.write(addr & 0x07FF, data);
         } else if addr >= constants::ppu::RAM_ADDR_MIN && addr <= constants::ppu::RAM_ADDR_MAX {
             // Might cause runtime error due to double mut borrow
+            // Change to PPU Write instead of PPU Bus => PPU Bus only accessible by PPU
             self.ppu.bus.write(addr & 0x0007, data);
         }
     }
@@ -42,6 +43,7 @@ impl CpuBus {
             return self.ram.read(addr & 0x07FF);
         } else if addr >= constants::ppu::RAM_ADDR_MIN && addr <= constants::ppu::RAM_ADDR_MAX {
             // Might cause runtime error due to double mut borrow
+            // Change to PPU Read instead of PPU Bus => PPU Bus only accessible by PPU
             return self.ppu.bus.read(addr & 0x0007, true);
         }
 

@@ -10,8 +10,8 @@ pub struct Ppu {
     screen: Vec<Srgb<u8>>,
 
     frame_complete: bool,
-    scanline: i16,
-    cycle: i16,
+    scanline: i32,
+    cycle: i32,
 
     pub bus: Box<PpuBus>,
 }
@@ -43,6 +43,8 @@ impl Ppu {
             //     nmi = true;
             // }
         }
+
+        // ! TODO: FIX BUG WITH SCREEN VEC OVERFLOW!
         self.screen[((self.cycle) + self.scanline * 240) as usize] = Srgb::<u8>::new(0, 255, 0);
         self.cycle += 1;
         if self.cycle >= 341 {
